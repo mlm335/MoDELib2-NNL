@@ -32,14 +32,14 @@ namespace model
     }
 
     template <int dim>
-    std::vector<std::shared_ptr<SlipSystem>> GlidePlane<dim>::slipSystems() const
+    std::set<std::shared_ptr<SlipSystem>> GlidePlane<dim>::slipSystems() const
     {
-        std::vector<std::shared_ptr<SlipSystem>> temp;
+        std::set<std::shared_ptr<SlipSystem>> temp;
         for(const auto& ss : grain.singleCrystal->slipSystems())
         {
             if(this->n.cross(ss->n).squaredNorm()==0)
             {
-                temp.push_back(ss);
+                temp.emplace(ss);
             }
         }
         return temp;

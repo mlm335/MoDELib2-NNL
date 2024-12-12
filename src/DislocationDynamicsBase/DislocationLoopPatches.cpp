@@ -46,17 +46,21 @@ namespace model
                 }
                 
                 const auto localLoopPosOnPeriodicPlane(SutherlandHodgman::clip(localNodePos,localPatchPos));
-                std::vector<Eigen::Matrix<double,dim,1>> globalLoopPos;
-                std::vector<Eigen::Matrix<double,dim-1,1>> localLoopPos;
                 
-                for(const auto& localPos : localLoopPosOnPeriodicPlane)
+                if(!localLoopPosOnPeriodicPlane.empty())
                 {
-                    globalLoopPos.push_back(periodicGlidePlane->referencePlane->globalPosition(localPos)+patch->shift);
-                    localLoopPos.push_back(patch->glidePlane->localPosition(globalLoopPos.back()));
-                }
-                globalPatches().emplace(patch,globalLoopPos);
-                localPatches().emplace(patch,localLoopPos);
-                
+                    std::vector<Eigen::Matrix<double,dim,1>> globalLoopPos;
+                    std::vector<Eigen::Matrix<double,dim-1,1>> localLoopPos;
+                    
+                    for(const auto& localPos : localLoopPosOnPeriodicPlane)
+                    {
+                        globalLoopPos.push_back(periodicGlidePlane->referencePlane->globalPosition(localPos)+patch->shift);
+                        localLoopPos.push_back(patch->glidePlane->localPosition(globalLoopPos.back()));
+                    }
+                    globalPatches().emplace(patch,globalLoopPos);
+                    localPatches().emplace(patch,localLoopPos);
+
+                }                
             }
         }
     }

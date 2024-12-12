@@ -23,7 +23,7 @@ namespace model
     /* init */,allowOverlap(false)
     /* init */,allowOutside(false)
     /* init */,velocityReductionFactor(1.0)
-    /* init */,phaseIDs(-1)
+    /* init */,phaseID(-1)
     {
         
     }
@@ -39,7 +39,7 @@ namespace model
     /* init */,allowOverlap(targetDensity>0.0? this->parser->readScalar<int>("allowOverlap",true) : false)
     /* init */,allowOutside(targetDensity>0.0? this->parser->readScalar<int>("allowOutside",true) : false)
     /* init */,velocityReductionFactor(targetDensity>0.0? this->parser->readScalar<double>("velocityReductionFactor",true) : 1.0)
-    /* init */,phaseIDs(targetDensity>0.0? this->parser->readScalar<int>("phaseID",true) : -1)
+    /* init */,phaseID(targetDensity>0.0? this->parser->readScalar<int>("phaseID",true) : -1)
     {
         
     }

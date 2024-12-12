@@ -16,6 +16,8 @@ Hyunsoo Lee <hyunsol@g.clemson.edu>
 Nikhil Admal <admal@illinois.edu>
 Nasr Ghoniem <ghoniem@ucla.edu>
 Salahudeen Mohamed Kunju <salahudeen.kunju@kit.edu>
+Pierre Antoine Geslin <pierre-antoine.geslin@insa-lyon.fr>
+David Rodney <david.rodney@univ-lyon1.fr>
 Markus Lazar <lazar@fkp.tu-darmstadt.de>
 Jaime Marian <jmarian@g.ucla.edu>
 Inam Lalani <inamlalani@miami.edu>

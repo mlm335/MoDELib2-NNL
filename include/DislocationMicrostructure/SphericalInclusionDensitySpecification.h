@@ -31,7 +31,7 @@ namespace model
         bool allowOverlap;
         bool allowOutside;
         double velocityReductionFactor;
-        int phaseIDs;
+        int phaseID;
 
         SphericalInclusionDensitySpecification();
         SphericalInclusionDensitySpecification(const std::string& fileName);

@@ -5,80 +5,92 @@ import numpy as np
 sys.path.append("../build/tools/pyMoDELib")
 import pyMoDELib
 
-simulationDir="../tutorials/DislocationDynamics/periodicDomains/climb/"
+simulationDir="../tutorials/climb/"
 ddBase=pyMoDELib.DislocationDynamicsBase(simulationDir)
 
 # Microstructure Generation
 microstructureGenerator=pyMoDELib.MicrostructureGenerator(ddBase)
 
-spec0=pyMoDELib.ShearLoopDensitySpecification()
-spec0.targetDensity=5.0e12
-spec0.radiusDistributionMean=1.0e-07
-spec0.radiusDistributionStd=0.0e-8
-spec0.numberOfSides=20
-#microstructureGenerator.addShearLoopDensity(spec0)
+spec=pyMoDELib.ShearLoopDensitySpecification()
+spec.targetDensity=5.0e12
+spec.radiusDistributionMean=1.0e-07
+spec.radiusDistributionStd=0.0e-8
+spec.numberOfSides=20
+#microstructureGenerator.addShearLoopDensity(spec)
 
-spec1=pyMoDELib.ShearLoopIndividualSpecification()
-spec1.slipSystemIDs=[0,-1]
-spec1.loopRadii=[27.0e-8,27.0e-8]
-spec1.loopCenters=np.array([[200.0,0.0,0.0],[0.0,0.0,0.0]])
-spec1.loopSides=[10,10]
-#microstructureGenerator.addShearLoopIndividual(spec1)
+spec=pyMoDELib.ShearLoopIndividualSpecification()
+spec.slipSystemIDs=[0,-1]
+spec.loopRadii=[27.0e-8,27.0e-8]
+spec.loopCenters=np.array([[200.0,0.0,0.0],[0.0,0.0,0.0]])
+spec.loopSides=[10,10]
+#microstructureGenerator.addShearLoopIndividual(spec)
 
-spec2=pyMoDELib.PeriodicDipoleDensitySpecification()
-spec2.targetDensity=5.0e13
-#microstructureGenerator.addPeriodicDipoleDensity(spec2)
+spec=pyMoDELib.PeriodicDipoleDensitySpecification()
+spec.targetDensity=5.0e13
+#microstructureGenerator.addPeriodicDipoleDensity(spec)
 
-spec3=pyMoDELib.PeriodicDipoleIndividualSpecification()
-spec3.slipSystemIDs=[0,-1]
-spec3.exitFaceIDs=[1,0]
-spec3.dipoleCenters=np.array([[200.0,0.0,0.0],[0.0,0.0,0.0]])
-spec3.dipoleHeights=[100.,100.]
-spec3.nodesPerLine=[4,4]
-spec3.glideSteps=[10.,10.]
-#microstructureGenerator.addPeriodicDipoleIndividual(spec3)
+spec=pyMoDELib.PeriodicDipoleIndividualSpecification()
+spec.slipSystemIDs=[0,-1]
+spec.exitFaceIDs=[1,0]
+spec.dipoleCenters=np.array([[200.0,0.0,0.0],[0.0,0.0,0.0]])
+spec.dipoleHeights=[100.,100.]
+spec.nodesPerLine=[4,4]
+spec.glideSteps=[10.,10.]
+#microstructureGenerator.addPeriodicDipoleIndividual(spec)
 
-spec4=pyMoDELib.PrismaticLoopDensitySpecification()
-spec4.targetDensity=5.0e13
-spec4.radiusDistributionMean=3e-08
-spec4.radiusDistributionStd=0e-08
-#microstructureGenerator.addPrismaticLoopDensity(spec4)
+spec=pyMoDELib.PrismaticLoopDensitySpecification()
+spec.targetDensity=5.0e13
+spec.radiusDistributionMean=3e-08
+spec.radiusDistributionStd=0e-08
+#microstructureGenerator.addPrismaticLoopDensity(spec)
 
-spec5=pyMoDELib.PrismaticLoopIndividualSpecification()
-spec5.slipSystemIDs=[0,7,13]
-spec5.loopRadii=[5e-8,2e-7,2e-8]
-spec5.loopCenters=np.array([[0,0,0],[500,600,500],[500,500,500]])
-spec5.glideSteps=[10.,10.,300.]
-#microstructureGenerator.addPrismaticLoopIndividual(spec5)
+spec=pyMoDELib.PrismaticLoopIndividualSpecification()
+spec.slipSystemIDs=[0,7,13]
+spec.loopRadii=[5e-8,2e-7,2e-8]
+spec.loopCenters=np.array([[0,0,0],[500,600,500],[500,500,500]])
+spec.glideSteps=[10.,10.,300.]
+#microstructureGenerator.addPrismaticLoopIndividual(spec)
 
-spec6=pyMoDELib.FrankLoopsDensitySpecification()
-spec6.targetDensity=5.0e12
-spec6.radiusDistributionMean=1.0e-07
-spec6.radiusDistributionStd=0.0e-8
-spec6.numberOfSides=20
-spec6.areVacancyLoops=1
-#microstructureGenerator.addFrankLoopsDensity(spec6)
+spec=pyMoDELib.FrankLoopsDensitySpecification()
+spec.targetDensity=5.0e12
+spec.radiusDistributionMean=1.0e-07
+spec.radiusDistributionStd=0.0e-8
+spec.numberOfSides=20
+spec.areVacancyLoops=1
+#microstructureGenerator.addFrankLoopsDensity(spec)
 
-spec7=pyMoDELib.FrankLoopsIndividualSpecification()
-spec7.planeIDs=[0,-1]
-spec7.loopRadii=[27.0e-8,27.0e-8]
-spec7.loopCenters=np.array([[200.0,0.0,0.0],[0.0,0.0,0.0]])
-spec7.loopSides=[10,10]
-spec7.isVacancyLoop=[1,0]
-#microstructureGenerator.addFrankLoopsIndividual(spec7)
+spec=pyMoDELib.FrankLoopsIndividualSpecification()
+spec.planeIDs=[0,-1]
+spec.loopRadii=[27.0e-8,27.0e-8]
+spec.loopCenters=np.array([[200.0,0.0,0.0],[0.0,0.0,0.0]])
+spec.loopSides=[10,10]
+spec.isVacancyLoop=[1,0]
+#microstructureGenerator.addFrankLoopsIndividual(spec)
 
-spec8=pyMoDELib.StackingFaultTetrahedraDensitySpecification()
-spec8.targetDensity=1.0e21
-spec8.sizeDistributionMean=2.5e-08
-spec8.sizeDistributionStd=1.0e-9
-#microstructureGenerator.addStackingFaultTetrahedraDensity(spec8)
+spec=pyMoDELib.StackingFaultTetrahedraDensitySpecification()
+spec.targetDensity=1.0e21
+spec.sizeDistributionMean=2.5e-08
+spec.sizeDistributionStd=1.0e-9
+#microstructureGenerator.addStackingFaultTetrahedraDensity(spec)
 
-spec9=pyMoDELib.StackingFaultTetrahedraIndividualSpecification()
-spec9.planeIDs=[0,1]
-spec9.areInverted=[0,0]
-spec9.sizes=[2.5e-08,2.5e-08]
-spec9.basePoints=np.array([[0.0,0.0,0.0],[100.0,0.0,0.0]])
-microstructureGenerator.addStackingFaultTetrahedraIndividual(spec9)
+spec=pyMoDELib.StackingFaultTetrahedraIndividualSpecification()
+spec.planeIDs=[0,1]
+spec.areInverted=[0,0]
+spec.sizes=[2.5e-08,2.5e-08]
+spec.basePoints=np.array([[0.0,0.0,0.0],[100.0,0.0,0.0]])
+#microstructureGenerator.addStackingFaultTetrahedraIndividual(spec)
+
+spec=pyMoDELib.SphericalInclusionDensitySpecification()
+spec.diameterLognormalDistribution_M=3.11e-8; #[m] of log-normal diameter M
+spec.diameterLognormalDistribution_S=0.38; #[-] of log-normal distribution parameter S
+spec.diameterLognormalDistribution_A=1.05e-8; #[m] log-normal distribution parameter A
+spec.transformationEigenDistortion=[0.003,0.0,0.0,0.0,0.003,0.0,0.0,0.0,0.003] # [-] inclusion eigendistortion components 11,12,13,21,22,23,31,32,33
+spec.patternVector_SI=[0.0,0.0,0.0e-7]; # [m] defines a planar pattern for the inclusions. Direction is plane normal, magnitude is plane spacing. Zero to zero for no pattern
+spec.allowOverlap=0;
+spec.allowOutside=0;
+spec.velocityReductionFactor=1.0;
+spec.phaseID=0;
+microstructureGenerator.addSphericalInclusionDensity(spec)
 
 
 microstructureGenerator.writeConfigFiles(0) # write evel_0.txt (optional)

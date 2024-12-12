@@ -190,7 +190,7 @@ namespace model
                                                                          parentSegment.network().ddBase.poly.T,
                                                                          dL,parentSegment.network().ddBase.simulationParameters.dt,parentSegment.network().stochasticForceGenerator);
                 // std::cout<<"v is "<<v<<std::endl;
-                if(v<0.0 && v>=-FLT_EPSILON)
+                if(v<0.0 && v>=-FLT_EPSILON && !parentSegment.network().stochasticForceGenerator)
                 {
                     v=0.0; // kill roundoff errors for small negative velocities
                 }
@@ -202,7 +202,7 @@ namespace model
                 
                 assert((parentSegment.network().stochasticForceGenerator || v>= 0.0) && "Velocity must be a positive scalar");
                 const bool useNonLinearVelocity=true;
-                if(useNonLinearVelocity && v>FLT_EPSILON)
+                if(useNonLinearVelocity && v>FLT_EPSILON && !parentSegment.network().stochasticForceGenerator)
                 {
                     v= 1.0-std::exp(-v);
                 }
@@ -450,8 +450,7 @@ namespace model
                     }
                 }
             }
-            
-            
+                        
             // Stacking fault contribution in the matrix
             if(parentSegment.slipSystem() && parentSegment.glidePlanes().size()==1)
             {
@@ -520,9 +519,7 @@ namespace model
                         }
                     }
                 }
-                
-                
-                
+                                
                 // Add solid-soution noise
                 if(slipSystem.planeNoise)
                 {
@@ -533,8 +530,7 @@ namespace model
                     }
                 }
             }
-            
-            
+                        
             for (auto& qPoint : quadraturePoints())
             {
                 

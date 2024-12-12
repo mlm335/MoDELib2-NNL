@@ -937,11 +937,15 @@ void DDLineField::plotField(const int& valID,const std::vector<QCheckBox*>& micr
     yArray->SetName(fieldComboBox->itemText(valID).toStdString().c_str());
     table->AddColumn(yArray);
 
+//    std::ofstream tempFile("linePlot.txt");
+    
     for(size_t k=0;k<abscissa().size();++k)
     {                    
         const auto row=table->InsertNextBlankRow(2);
         table->SetValue(row, 0, abscissa()[k]);
         table->SetValue(row, 1, dataPnts()[k].value(valID,microstructuresCheck));
+        
+//        tempFile<<abscissa()[k]<<"\t"<<dataPnts()[k].value(valID,microstructuresCheck)<<"\n";
     }
     
     

@@ -166,9 +166,13 @@ namespace model
                         {
                             std::shared_ptr<LoopType> newLoop(loops().clone(loop->key));
                             
+//                            const bool netNodesClonable(Ni->networkNode->loopNodes().size()==1 && Nj->networkNode->loopNodes().size());
+//                            const auto cloneNi(loopNodes().clone(Ni->key,newLoop,netNodesClonable? networkNodes().clone(Ni->networkNode->sID) : Ni->networkNode));
+//                            const auto cloneNj(loopNodes().clone(Nj->key,newLoop,netNodesClonable? networkNodes().clone(Nj->networkNode->sID) : Nj->networkNode));
+
                             const auto cloneNi(loopNodes().clone(Ni->key,newLoop,Ni->networkNode));
                             const auto cloneNj(loopNodes().clone(Nj->key,newLoop,Nj->networkNode));
-
+                            
                             std::vector<std::tuple<std::shared_ptr<LoopNodeType>,std::shared_ptr<LoopNodeType>>> linksToDisconect;
                             while(currLink->source!=Nj)
                             {

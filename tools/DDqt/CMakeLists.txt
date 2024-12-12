@@ -1,4 +1,5 @@
 ### Qt ### #ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
+
 find_package(Qt6 COMPONENTS Widgets OpenGL REQUIRED)
 message (STATUS "Qt6_VERSION: ${Qt6_VERSION}")
 if (NOT Qt6_FOUND)
@@ -15,6 +16,9 @@ if (NOT VTK_FOUND)
 endif()
 
 add_executable(DDqt DDqt.cxx)
+set_target_properties(DDqt PROPERTIES AUTOMOC ON)
+set_target_properties(DDqt PROPERTIES AUTORCC ON)
+set_target_properties(DDqt PROPERTIES AUTOUIC ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src src)

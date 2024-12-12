@@ -19,6 +19,7 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QGroupBox>
+#include <QLabel>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkVersion.h>
@@ -84,30 +85,50 @@ namespace model
         const std::shared_ptr<DislocationNetwork<3,0>> dislocationNetwork;
         QGridLayout* mainLayout;
         QGroupBox* glidePlanesGroup;
+        
+        vtkSmartPointer<vtkLookupTable> lut;
         QGroupBox* glidePlanesNoiseGroup;
-        QComboBox* glidePlanesNoiseBox;
+        QLabel* noiseMeshSizeLabel;
+        QLineEdit* noiseMeshSizeEdit;
+        QLabel* grainNoiseLabel;
+        QComboBox* grainNoiseBox;
         QComboBox* slipSystemNoiseBox;
+        QComboBox* glidePlanesNoiseBox;
         QLineEdit* ssNoiseMin;
         QLineEdit* ssNoiseMax;
         QLineEdit* sfNoiseMin;
         QLineEdit* sfNoiseMax;
+
+//        vtkSmartPointer<vtkPoints> noisePts;
+//        vtkSmartPointer<vtkCellArray> noiseTriangles;
+//        vtkSmartPointer<vtkUnsignedCharArray> noiseColors;
+        vtkSmartPointer<vtkPolyData> noisePolydata;
+        vtkSmartPointer<vtkDataSetMapper> noiseMapper;
+        vtkSmartPointer<vtkActor> noiseActor;
+        
+        
         QGroupBox* glidePlaneMeshGroup;
         vtkSmartPointer<vtkPolyData> glidePlanePolydata;
         vtkSmartPointer<vtkPolyDataMapper> glidePlaneMapper;
         vtkSmartPointer<vtkActor> glidePlaneActor;
+        
         vtkSmartPointer<vtkPolyData> meshPolydata;
         vtkSmartPointer<vtkPolyDataMapper> meshMapper;
         vtkSmartPointer<vtkActor> meshActor;
-        std::map<size_t,std::vector<vtkSmartPointer<vtkDataSetMapper>>> noiseMappers;
-        std::map<size_t,std::vector<vtkSmartPointer<vtkActor>>> noiseActors;
-        Eigen::Array<double,2,2> noiseLimits;
+        
+//        std::map<size_t,std::vector<vtkSmartPointer<vtkDataSetMapper>>> noiseMappers;
+//        std::map<size_t,std::vector<vtkSmartPointer<vtkActor>>> noiseActors;
+//        Eigen::Array<double,2,2> noiseLimits;
         
     public:
         
         
         GlidePlaneActor(vtkGenericOpenGLRenderWindow* const,vtkRenderer* const,DefectiveCrystal<3>& defectiveCrystal_in);
         void updateConfiguration();
-        
+        void computeMeshIntersections();
+        void computeGlidePlaneNoise();
+        void computeStackingFaults();
+
     };
 
 } // namespace model

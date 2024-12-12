@@ -24,6 +24,10 @@ namespace model
     /* init */,CD(CD_in)
     /* init */,vClimbRef(getVclimbRef())
     {
+        if(!CD)
+        {
+            throw std::runtime_error("DislocationClimbSolverBase requires ClusterDynamics.");
+        }
     }
 
     template <typename DislocationNetworkType>
@@ -89,6 +93,7 @@ namespace model
         }
         else
         {
+            std::cout<<redBoldColor<<"ClusterDynamics not found. Climb disabled."<<defaultColor<<std::endl;
             return nullptr;
         }
     }

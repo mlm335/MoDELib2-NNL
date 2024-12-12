@@ -60,7 +60,7 @@ namespace model
                    const GlidePlaneKeyType& key_in) ;
         GlidePlane(const GlidePlane<dim>& other) = delete;
         ~GlidePlane();
-        std::vector<std::shared_ptr<SlipSystem>> slipSystems() const;
+        std::set<std::shared_ptr<SlipSystem>> slipSystems() const;
 
     };
 

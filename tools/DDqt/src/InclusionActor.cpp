@@ -160,6 +160,7 @@ namespace model
 //                ugrid->InsertNextCell(VTK_POLYHEDRON, inclusions->polyhedronInclusionNodes().size(), polyhedronPointsIDs, pair1.second.size(), faces->GetPointer(0));
 //            }
             
+//            polyhedronMapper->SetInputData(polyhedronPoints->GetOutputPort());
             polyhedronMapper->SetInputData(ugrid);
             
         }

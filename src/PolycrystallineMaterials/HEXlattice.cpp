@@ -149,9 +149,9 @@ namespace model
             DislocationMobilitySelector mobilitySelectorPyramidal("HEXpyramidal");
             const std::shared_ptr<DislocationMobilityBase> hexMobilityPyramidal(mobilitySelectorPyramidal.getMobility(dislocationMobilityTypePyramidal,material));
 
-            const int solidSolutionNoiseMode(TextFileParser(material.materialFile).readScalar<int>("solidSolutionNoiseMode",true));
-            const int stackingFaultNoiseMode(TextFileParser(material.materialFile).readScalar<int>("stackingFaultNoiseMode",true));
-            std::shared_ptr<GlidePlaneNoise> planeNoise((solidSolutionNoiseMode||stackingFaultNoiseMode)? new GlidePlaneNoise(material) : nullptr);
+//            const int solidSolutionNoiseMode(TextFileParser(material.materialFile).readScalar<int>("solidSolutionNoiseMode",true));
+//            const int stackingFaultNoiseMode(TextFileParser(material.materialFile).readScalar<int>("stackingFaultNoiseMode",true));
+            std::shared_ptr<GlidePlaneNoise> planeNoise(new GlidePlaneNoise(material));
 
             
             

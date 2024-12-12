@@ -88,7 +88,7 @@ SphericalInclusionsGenerator::SphericalInclusionsGenerator(const SphericalInclus
                 const VectorDimD O(pointHeigth*globalVector);
                 P-=(P-O).dot(globalDir)*globalDir;
             }
-            if(generateSingle(mg,P,radius,spec.transformationEigenDistortion,spec.velocityReductionFactor,spec.phaseIDs,spec.allowOutside,spec.allowOverlap))
+            if(generateSingle(mg,P,radius,spec.transformationEigenDistortion,spec.velocityReductionFactor,spec.phaseID,spec.allowOutside,spec.allowOverlap))
             {
                 density+=1.0/mg.ddBase.mesh.volume()/std::pow(mg.ddBase.poly.b_SI,3);
                 std::cout<<"inclusion density="<<density<<std::endl;

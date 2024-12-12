@@ -57,8 +57,8 @@ namespace model
         NetworkLinkType::initFromFile(ddBase.simulationParameters.traitsIO.ddFile);
         DislocationFieldBase<dim>::initFromFile(ddBase.simulationParameters.traitsIO.ddFile);
         
-        glideSolver=DislocationGlideSolverFactory<DislocationNetwork<dim,corder>>::getGlideSolver(*this,TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readString("glideSolverType",true));
-        climbSolver=DislocationClimbSolverFactory<DislocationNetwork<dim,corder>>::getClimbSolver(*this,TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readString("climbSolverType",true));
+        glideSolver=DislocationGlideSolverFactory<DislocationNetwork<dim,corder>>::getGlideSolver(*this,TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readString("glideSolverType",false));
+        climbSolver=DislocationClimbSolverFactory<DislocationNetwork<dim,corder>>::getClimbSolver(*this,TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readString("climbSolverType",false));
         _inclusions=this->microstructures.template getUniqueTypedMicrostructure<InclusionMicrostructure<dim>>();
                 
         setConfiguration(configIO);
@@ -487,7 +487,14 @@ namespace model
         }
         else
         {
-            return true;
+            if(climbSolver)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
@@ -645,14 +652,13 @@ else
                 }
                 X=glideSolver->getNodeVelocities();
             }
-            
         }
         if(int(NdofXnode*this->networkNodes().size())==X.size())
         {
             size_t k=0;
             for (auto& networkNode : this->networkNodes())
             {
-                networkNode.second.lock()->set_V(X.segment(NdofXnode*k,NdofXnode)); // double cast to remove some numerical noise
+                networkNode.second.lock()->set_V(X.segment(NdofXnode*k,NdofXnode),isClimbingStep); // double cast to remove some numerical noise
                 ++k;
             }
         }

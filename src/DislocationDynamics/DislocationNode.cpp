@@ -122,7 +122,7 @@ typename DislocationNode<dim,corder>::VectorDim DislocationNode<dim,corder>::cli
 
     
     template <int dim, short unsigned int corder>
-    void DislocationNode<dim,corder>::projectVelocity()
+    void DislocationNode<dim,corder>::projectVelocity(const bool& isClimbingStep)
     {
         
         VectorOfNormalsType temp;
@@ -137,6 +137,11 @@ typename DislocationNode<dim,corder>::VectorDim DislocationNode<dim,corder>::cli
                 if(loop->glidePlane)
                 {
                     temp.push_back(loop->glidePlane->unitNormal);
+                }
+                if(!isClimbingStep && loop->loopType==DislocationLoopIO<dim>::SESSILELOOP)
+                {
+                    velocity.setZero();
+                    break;
                 }
 //                if(loop->loopType==DislocationLoopIO<dim>::GLISSILELOOP)
 //                {
@@ -182,13 +187,13 @@ typename DislocationNode<dim,corder>::VectorDim DislocationNode<dim,corder>::cli
     }
     
     template <int dim, short unsigned int corder>
-    void DislocationNode<dim,corder>::set_V(const VectorDim& vNew)
+    void DislocationNode<dim,corder>::set_V(const VectorDim& vNew,const bool& isClimbingStep)
     {
                 
         vOld=velocity; // store current value of velocity before updating
         
         velocity=vNew;
-        projectVelocity();
+        projectVelocity(isClimbingStep);
 
 //        if (this->network().capMaxVelocity && !this->network().timeIntegrator.isTimeStepControlling(*this))
 //        {

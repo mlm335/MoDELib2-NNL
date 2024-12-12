@@ -75,8 +75,8 @@ namespace model
         const VectorDim& get_V() const;
         std::set<LoopType*> sessileLoops() const;
         MeshLocation meshLocation() const;
-        void set_V(const VectorDim& vNew);
-        void projectVelocity();
+        void set_V(const VectorDim& vNew,const bool& isClimbingStep);
+        void projectVelocity(const bool& isClimbingStep);
         VectorDim invariantDirectionOfMotion() const;
 //        const std::shared_ptr<NetworkNodeType>& virtualBoundaryNode() const;
         GlidePlaneContainerType glidePlanes() const;

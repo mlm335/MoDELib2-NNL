@@ -459,7 +459,9 @@ namespace model
             const VectorLowerDim& Pj(*edges()[j]->source);
             
             if ( ((Pi(1)>test(1)) != (Pj(1)>test(1))) &&
-                (test(0) < (Pj(0)-Pi(0)) * (test(1)-Pi(1)) / (Pj(1)-Pi(1)) + Pi(0)) )
+                (test(0) < (Pj(0)-Pi(0)) * (test(1)-Pi(1)) / (Pj(1)-Pi(1)) + Pi(0)
+                 //+std::numeric_limits<double>::epsilon()
+                 ) )
             {
                 c = !c;
             }
@@ -775,7 +777,7 @@ namespace model
         insideReferencePoint/=centralPlane->meshIntersections.size();
         if(!lastPatch->contains(insideReferencePoint))
         {
-            throw std::runtime_error("lasatPatch does not cointain insideReferencePoint");
+            throw std::runtime_error("lastPatch does not cointain insideReferencePoint");
         }
 //        assert(lastPatch->contains(insideReferencePoint));
         

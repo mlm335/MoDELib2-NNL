@@ -17,7 +17,7 @@ class PolyCrystalFile(dict):
     crystalStructure=''
     absoluteTemperature=300.0
     dislocationMobilityType='default'
-    meshFile='../../../MeshLibrary/unitCube.msh'
+    meshFile='../../Library/Meshes/unitCube.msh'
     grain1globalX1=np.array([1,0,0]) # overwritten if alignToSlipSystem0=true
     grain1globalX3=np.array([0,0,1]) # overwritten if alignToSlipSystem0=true
     A=np.zeros((3,3))
@@ -37,7 +37,7 @@ class PolyCrystalFile(dict):
     
     def __init__(self, materialFile):
         self.materialFile = materialFile
-        self.crystalStructure = getStringInFile(materialFile,'crystalStructure')
+        self.crystalStructure = getStringInFile('inputFiles/'+materialFile,'crystalStructure')
         if self.crystalStructure == 'FCC':
             self.A=np.array([[0.,1.,1.],[1.,0.,1.],[1.,1.,0.]])/np.sqrt(2.0)
         elif self.crystalStructure == 'BCC':
@@ -90,9 +90,9 @@ class PolyCrystalFile(dict):
             self.boxEdgesLatticeLengths[j]=np.linalg.norm(self.boxEdgesLatticeDirections[:,j])
             self.F[:,j]=self.C2G@self.boxEdgesLatticeDirections[:,j]*self.boxScaling[j]
         
-    def write(self):
+    def write(self,folderName):
         self.compute()
-        polyFile = open("polycrystal.txt", "w")
+        polyFile = open(folderName+'/polycrystal.txt', 'w')
         polyFile.write('materialFile='+self.materialFile+';\n')
         polyFile.write('absoluteTemperature='+str(self.absoluteTemperature)+'; # [K] simulation temperature \n')
 #        polyFile.write('dislocationMobilityType='+self.dislocationMobilityType+'; # default or FCC,BCC,HEXbasal,HEXprismatic,HEXpyramidal \n')
@@ -187,13 +187,14 @@ def getFarray(F,Flabels,label):
     return np.zeros(shape=(0,0))
 
 def setInputVariable(fileName,variable,newVal):
+    variable=variable.strip()
     with fileinput.FileInput(fileName, inplace=True) as file:
         for line in file:
             if variable in line:
                 foundPound=line.find('#');
                 foundEqual=line.find('=');
                 foundSemiCol=line.find(';');
-                if (foundPound==-1 or foundPound > foundSemiCol) and (foundSemiCol>foundEqual):
+                if (foundPound==-1 or foundPound > foundSemiCol) and (foundSemiCol>foundEqual) and (variable == line[0:foundEqual].strip()):
                     oldVal=line[foundEqual+1:foundSemiCol]
                     line = line.replace(oldVal,newVal)
                     print(line, file=sys.stderr)

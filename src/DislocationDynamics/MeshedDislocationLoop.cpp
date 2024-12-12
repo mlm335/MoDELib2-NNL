@@ -118,7 +118,8 @@ namespace model
                                 
                                 bool oldPointIncluded=false;
                                 size_t oldPointID=0;
-                                for(int n=0;n<np+1;++n)
+                                //for(int n=0;n<np+1;++n)
+                                for(int n=1;n<np;++n) // skip intersection with original polygon
                                 {
                                     const double u(double(n)/np);
                                     const Eigen::Matrix<double,2,1> P(p0+u*chord);
@@ -291,7 +292,7 @@ void MeshedDislocationLoop::update()
             {
                 for(size_t triID=0;triID<triangles.size();++triID)
                 {
-                    temp-=solidAngle(x+shift,triID)/4.0/std::numbers::pi*defGradients[applyDefGradient]*burgers;
+                    temp-=solidAngle(x+shift,triID)/4.0/std::numbers::pi*defGradients[triID]*burgers;
                 }
             }
         }

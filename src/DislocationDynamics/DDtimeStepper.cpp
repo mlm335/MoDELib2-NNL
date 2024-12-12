@@ -55,9 +55,9 @@ namespace model
                 }
             }
 //            const double vRef(1.0);
-            const double vEff(vmax+vRef*std::exp(-vmax/(vRef*vFactor)));
+            const float vEff(vmax+vRef*std::exp(-vmax/(vRef*vFactor))); // use float to truncate some floating point digits
             std::cout<<" (vMax="<<vmax<<", vMaxID="<<vmaxID<<", vRef="<<vRef<<", vEff="<<vEff<<")"<<std::flush;
-            return std::min(std::ceil(dxMax / vEff),DN.ddBase.simulationParameters.dtMax);
+            return std::min(dxMax / vEff,DN.ddBase.simulationParameters.dtMax);
         }
         else
         {

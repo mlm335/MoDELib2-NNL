@@ -172,11 +172,6 @@ class TextFileParser : public std::ifstream
                 }
             }
         }
-        if(returnVector.size()==0)
-        {
-            throw std::runtime_error("File "+fileName+" does not cointain line with format "+key+"=...;");
-        }
-
         return returnVector;
     }
     
@@ -205,9 +200,17 @@ public:
     /**********************************************************************/
     std::string readString(const std::string& key,const bool&verbose=false)
     {
-        const std::pair<std::string,std::string> strPair(readKey(key)[0]);
-        if(verbose) std::cout<<cyanColor<<key<<"="<<strPair.first<<" "<<strPair.second<<defaultColor<<std::endl;
-        return strPair.first;
+        const auto strPair(readKey(key));
+        if(strPair.size())
+        {
+            if(verbose) std::cout<<cyanColor<<key<<"="<<strPair[0].first<<" "<<strPair[0].second<<defaultColor<<std::endl;
+            return strPair[0].first;
+        }
+        else
+        {
+            throw std::runtime_error("File "+fileName+" does not cointain line with format "+key+"=...;");
+            return std::string();
+        }
     }
     
     /**********************************************************************/
@@ -233,11 +236,23 @@ public:
     template<typename Scalar>
     Scalar readScalar(const std::string& key,const bool&verbose=false)
     {
-        if(verbose) std::cout<<cyanColor<<key<<"="<<std::flush;
-        const std::pair<std::string,std::string> strPair(readKey(key)[0]);
-        const Scalar read(StringToScalar<Scalar>::toScalar(strPair.first));
-        if(verbose) std::cout<<read<<" "<<strPair.second<<defaultColor<<std::endl;
-        return read;
+        const auto strPair(readKey(key));
+        if(strPair.size())
+        {
+            if(verbose) std::cout<<cyanColor<<key<<"="<<std::flush;
+            const Scalar read(StringToScalar<Scalar>::toScalar(strPair[0].first));
+            if(verbose) std::cout<<read<<" "<<strPair[0].second<<defaultColor<<std::endl;
+            return read;
+        }
+        else
+        {
+            throw std::runtime_error("File "+fileName+" does not cointain line with format "+key+"=...;");
+            return Scalar();
+        }
+//        if(verbose) std::cout<<cyanColor<<key<<"="<<std::flush;
+//        const Scalar read(StringToScalar<Scalar>::toScalar(strPair.first));
+//        if(verbose) std::cout<<read<<" "<<strPair.second<<defaultColor<<std::endl;
+//        return read;
     }
     
     /**********************************************************************/

@@ -226,6 +226,8 @@ PYBIND11_MODULE(pyMoDELib,m)
         .def("addFrankLoopsIndividual", &MicrostructureGenerator::addFrankLoopsIndividual)
         .def("addStackingFaultTetrahedraDensity", &MicrostructureGenerator::addStackingFaultTetrahedraDensity)
         .def("addStackingFaultTetrahedraIndividual", &MicrostructureGenerator::addStackingFaultTetrahedraIndividual)
+        .def("addSphericalInclusionDensity", &MicrostructureGenerator::addSphericalInclusionDensity)
+        .def("addSphericalInclusionIndividual", &MicrostructureGenerator::addSphericalInclusionIndividual)
         .def("writeConfigFiles", &MicrostructureGenerator::writeConfigFiles)
     ;
         
@@ -371,6 +373,39 @@ PYBIND11_MODULE(pyMoDELib,m)
                         self.basePoints = val;
                     }
                 )
+    ;
+    
+    py::class_<SphericalInclusionDensitySpecification
+    /*      */>(m,"SphericalInclusionDensitySpecification")
+        .def(py::init<>())
+        .def(py::init<const std::string&>())
+        .def_readwrite("diameterLognormalDistribution_M", &SphericalInclusionDensitySpecification::diameterLognormalDistribution_M)
+        .def_readwrite("diameterLognormalDistribution_S", &SphericalInclusionDensitySpecification::diameterLognormalDistribution_S)
+        .def_readwrite("diameterLognormalDistribution_A", &SphericalInclusionDensitySpecification::diameterLognormalDistribution_A)
+        .def_property( "transformationEigenDistortion",
+                    [](const SphericalInclusionDensitySpecification& self )
+                    {// Getter
+                        return self.transformationEigenDistortion;
+                    },
+                    []( SphericalInclusionDensitySpecification& self, const Eigen::Ref<const Eigen::Matrix<double,1,3*3>>& val )
+                    {// Setter
+                        self.transformationEigenDistortion = val;
+                    }
+                )
+        .def_property( "patternVector_SI",
+                    [](const SphericalInclusionDensitySpecification& self )
+                    {// Getter
+                        return self.patternVector_SI;
+                    },
+                    []( SphericalInclusionDensitySpecification& self, const Eigen::Ref<const Eigen::Matrix<double,1,3>>& val )
+                    {// Setter
+                        self.patternVector_SI = val;
+                    }
+                )
+        .def_readwrite("allowOverlap", &SphericalInclusionDensitySpecification::allowOverlap)
+        .def_readwrite("allowOutside", &SphericalInclusionDensitySpecification::allowOutside)
+        .def_readwrite("velocityReductionFactor", &SphericalInclusionDensitySpecification::velocityReductionFactor)
+        .def_readwrite("phaseID", &SphericalInclusionDensitySpecification::phaseID)
     ;
     
 }

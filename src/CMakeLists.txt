@@ -1,3 +1,4 @@
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Math Math)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Geometry Geometry)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Lattices Lattices)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Mesh Mesh)
