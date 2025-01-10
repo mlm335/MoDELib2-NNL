@@ -25,7 +25,7 @@ namespace model
         inline static  double a2=1;
         
         //! dim x dim identity matrix
-        inline static const Eigen::Matrix<double,dim,dim> I=Eigen::Matrix<double,dim,dim>::Identity();
+//        inline static const Eigen::Matrix<double,dim,dim> I=Eigen::Matrix<double,dim,dim>::Identity();
         static void initFromFile(const std::string& fileName);
         
         

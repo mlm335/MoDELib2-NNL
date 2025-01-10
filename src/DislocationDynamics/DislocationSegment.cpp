@@ -739,8 +739,8 @@ typename DislocationSegment<dim, corder>::VectorDim DislocationSegment<dim, cord
         return temp;
     }
 
-    template <int dim, short unsigned int corder>
-    const typename DislocationSegment<dim,corder>::MatrixDim DislocationSegment<dim,corder>::I=DislocationSegment<dim,corder>::MatrixDim::Identity();
+//    template <int dim, short unsigned int corder>
+//    const typename DislocationSegment<dim,corder>::MatrixDim DislocationSegment<dim,corder>::I=DislocationSegment<dim,corder>::MatrixDim::Identity();
     
     template <int dim, short unsigned int corder>
     const typename DislocationSegment<dim,corder>::VectorDim DislocationSegment<dim,corder>::zeroVector=DislocationSegment<dim,corder>::VectorDim::Zero();

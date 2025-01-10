@@ -79,7 +79,7 @@ namespace model
         std::shared_ptr<SlipSystem> _slipSystem;
 
         
-        static const MatrixDim I;
+//        static const MatrixDim I;
         static const VectorDim zeroVector;
         static double quadPerLength;
 //        static bool assembleWithTangentProjection;

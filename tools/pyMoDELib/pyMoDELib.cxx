@@ -205,6 +205,8 @@ PYBIND11_MODULE(pyMoDELib,m)
         .def(py::init<DislocationDynamicsBase<3>&>())
         .def("initializeConfiguration", static_cast<void (DefectiveCrystal<3>::*)(const DDconfigIO<3>&)>(&DefectiveCrystal<3>::initializeConfiguration))
         .def("dislocationNetwork", &DefectiveCrystal<3>::dislocationNetwork,pybind11::return_value_policy::reference)
+        .def("runSingleStep",&DefectiveCrystal<3>::runSingleStep)
+        .def("runSteps",&DefectiveCrystal<3>::runSteps)
     ;
 
     py::class_<DDconfigIO<3>

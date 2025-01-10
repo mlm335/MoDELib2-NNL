@@ -62,9 +62,6 @@ namespace model
         std::cout<<tag<<" computing noise "<<std::flush;
         const auto t0= std::chrono::system_clock::now();
 
-
-#ifdef _MODEL_GLIDE_PLANE_NOISE_GENERATOR_
-        
         const int NX(gridSize(0));
         const int NY(gridSize(1));
         const int NZ(64);
@@ -73,6 +70,10 @@ namespace model
         const double LX(NX*gridSpacing(0));
         const double LY(NY*gridSpacing(1));
         const double LZ(NZ*0.5*(gridSpacing(0)+gridSpacing(1)));
+
+
+#ifdef _MODEL_GLIDE_PLANE_NOISE_GENERATOR_
+        
 
         
     // Apply Gaussian noise to kCorrelations
@@ -214,7 +215,7 @@ namespace model
 #else
         
 //        std::cout<<"here 7"<<std::endl;
-    this->resize(NX*NY,NoiseType::Zero());
+    this->resize(NX*NY,NoiseTraits<N>::Zero());
 //        std::cout<<"here 8"<<std::endl;
 #endif
         std::cout<<greenColor<<" ["<<(std::chrono::duration<double>(std::chrono::system_clock::now()-t0)).count()<<" sec]"<<defaultColor<<std::endl;

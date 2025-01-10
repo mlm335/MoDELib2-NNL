@@ -9,6 +9,7 @@
 #define model_AnalyticalSolidSolutionNoise_cpp
 
 #include <AnalyticalSolidSolutionNoise.h>
+//#include <complex.h>
 
 namespace model
 {
