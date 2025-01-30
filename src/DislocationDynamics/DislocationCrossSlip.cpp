@@ -314,6 +314,16 @@ namespace model
                     }
                 }
             }
+            
+            for(const auto& newLoop : newLoops)
+            {
+                std::cout<<"new loop"<<std::endl;
+                for(const auto& newNodePair : newLoop->nodeSequence())
+                {
+                    std::cout<<newNodePair.first->get_P().transpose()<<","<<newNodePair.first->periodicPlanePatch()->shift.transpose()<<","<<(newNodePair.first->periodicPlaneEdge.first!=nullptr)<<","<<(newNodePair.first->periodicPlaneEdge.second!=nullptr)<<std::endl;
+                }
+            }
+            
             DN.updateBoundaryNodes(); // After creating loops, bnd nodes must be updated
             
             for(auto& loop :  newLoops)

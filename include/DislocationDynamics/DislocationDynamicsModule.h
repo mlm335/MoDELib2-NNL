@@ -90,6 +90,9 @@ namespace model
     struct DislocationClimbSolverBase;
 
     template <typename DislocationNetworkType>
+    class DislocationJunctionFormation;
+
+    template <typename DislocationNetworkType>
     struct DDtimeStepper;
 
     template <int dim>

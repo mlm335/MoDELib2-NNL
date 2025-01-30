@@ -12,13 +12,6 @@
 #include <random>
 #include <Eigen/Dense>
 
-
-//#ifdef _MODEL_GLIDE_PLANE_NOISE_GENERATOR_
-////#include <complex.h>
-//#include <fftw3.h>
-////#include <boost/math/special_functions/bessel.hpp>
-//#endif
-
 #include <NoiseTraits.h>
 #include <GlidePlaneNoiseBase.h>
 #include <PolycrystallineMaterialBase.h>
@@ -27,166 +20,22 @@
 namespace model
 {
 
-struct GlidePlaneNoise : //public UniformPeriodicGrid<2>
-/*                    */ public std::map<std::string,std::shared_ptr<GlidePlaneNoiseBase<2>>> // solid-solution
-/*                    */,public std::map<std::string,std::shared_ptr<GlidePlaneNoiseBase<1>>> // stacking-fault
-{
-    typedef typename Eigen::Matrix<double,3,1> VectorDim;
-    typedef typename NoiseTraitsBase::GridSizeType GridSizeType;
-    typedef std::map<std::string,std::shared_ptr<GlidePlaneNoiseBase<2>>> SolidSolutionNoiseContainer;
-    typedef std::map<std::string,std::shared_ptr<GlidePlaneNoiseBase<1>>> StackingFaultNoiseContainer;
-
-
-//        const int solidSolutionNoiseMode;
-//        const int stackingFaultNoiseMode;
-//
-//        const std::shared_ptr<SolidSolutionNoise> solidSolution;
-//        const std::shared_ptr<StackingFaultNoise> stackingFault;
-            
-    
-    GlidePlaneNoise(const PolycrystallineMaterialBase& mat);
-    
-//        GridSizeType rowAndColIndices(const int& storageIndex) const;
-//
-//        int storageIndex(const int& i,const int& j) const;
-            
-    std::tuple<double,double,double> gridInterp(const Eigen::Matrix<double,2,1>& localPos) const;
-    
-    std::tuple<double,double,double> gridVal(const Eigen::Array<int,2,1>& idx) const;
-    
-    const SolidSolutionNoiseContainer& solidSolutionNoise() const;
-    SolidSolutionNoiseContainer& solidSolutionNoise();
-    const StackingFaultNoiseContainer& stackingFaultNoise() const;
-    StackingFaultNoiseContainer& stackingFaultNoise();
-
-};
-
-//    struct SolidSolutionNoiseReader : public NoiseTraits<2>::NoiseContainerType
-//    {
-//        
-//        typedef typename NoiseTraitsBase::REAL_SCALAR REAL_SCALAR;
-//        typedef typename NoiseTraitsBase::COMPLEX COMPLEX;
-//        typedef typename NoiseTraitsBase::GridSizeType GridSizeType;
-//        typedef typename NoiseTraitsBase::GridSpacingType GridSpacingType;
-//        typedef typename NoiseTraits<2>::NoiseType NoiseType;
-//        typedef typename NoiseTraits<2>::NoiseContainerType NoiseContainerType;
-//        
-//        
-//        
-////        static int LittleEndian();
-////        
-////        static float ReverseFloat( const float inFloat );
-////        
-////        static double ReverseDouble( const double inDouble );
-//        
-//        static std::pair<GridSizeType,GridSpacingType> Read_dimensions(const char *fname);
-//        
-//        static void Read_noise_vtk(const char *fname, REAL_SCALAR *Noise, int Nr,const double& MSS);
-//        
-//        SolidSolutionNoiseReader(const PolycrystallineMaterialBase& mat,
-//                                 const GridSizeType& _gridSize, const GridSpacingType& _gridSpacing_A);
-//        
-//        
-//    };
-
- 
-//    class SolidSolutionNoise : public GlidePlaneNoiseBase<2>
-//    {
-//        typedef typename NoiseTraitsBase::REAL_SCALAR REAL_SCALAR;
-//        typedef typename NoiseTraitsBase::COMPLEX COMPLEX;
-//        typedef typename NoiseTraitsBase::GridSizeType GridSizeType;
-//        typedef typename NoiseTraitsBase::GridSpacingType GridSpacingType;
-//        typedef typename NoiseTraits<2>::NoiseType NoiseType;
-//        typedef typename NoiseTraits<2>::NoiseContainerType NoiseContainerType;
-//        
-//        
-////        const NoiseContainerType& noiseVector() const;
-////        
-////        NoiseContainerType& noiseVector();
-//
-//    public:
-//        
-////        const GridSizeType gridSize;
-////        const GridSpacingType gridSpacing_A;
-//        
-//        SolidSolutionNoise(const PolycrystallineMaterialBase& mat,
-//                           const GridSizeType& _gridSize, const GridSpacingType& _gridSpacing_A, const int& solidSolutionNoiseMode);
-//        
-//    };
-
-//    struct AnalyticalSolidSolutionNoise: public NoiseTraits<2>::NoiseContainerType
-//    {
-//
-//        typedef typename NoiseTraits<2>::REAL_SCALAR REAL_SCALAR;
-//        typedef typename NoiseTraits<2>::COMPLEX COMPLEX;
-//        typedef typename NoiseTraits<2>::GridSizeType GridSizeType;
-//        typedef typename NoiseTraitsBase::GridSpacingType GridSpacingType;
-//        typedef typename NoiseTraits<2>::NoiseType NoiseType;
-//        typedef typename NoiseTraits<2>::NoiseContainerType NoiseContainerType;
-//        
-//        int NX, NY, NZ;
-//        REAL_SCALAR DX, DY, DZ;
-//        REAL_SCALAR a;
-//        REAL_SCALAR a_cai;
-//        int seed;
-//        //    int flag;
-//        REAL_SCALAR LX, LY, LZ;
-//        REAL_SCALAR DV;
-//        int NR;
-//        int NK;
-//        REAL_SCALAR Norm;
-//
-//        AnalyticalSolidSolutionNoise(const PolycrystallineMaterialBase& mat,
-//                                    const GridSizeType& _gridSize, const GridSpacingType& _gridSpacing_A);
-//        
-//        
-//#ifdef _MODEL_GLIDE_PLANE_NOISE_GENERATOR_
-//        // Cai doubly-convoluted spreading function in Fourier space
-//        static REAL_SCALAR Wk_Cai(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a) ;
-//
-//        // Cai spreading function
-//        static REAL_SCALAR W_Cai(REAL_SCALAR r2, REAL_SCALAR a) ;
-// 
-//        static REAL_SCALAR W_t_Cai(REAL_SCALAR r2, REAL_SCALAR a) ;
-//        // normalized auto-correlation function in Fourier space for sigma_xy
-//        REAL_SCALAR S_xy_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const;
-//
-//        // normalized auto-correlation function in Fourier space for sigma_xz
-//        REAL_SCALAR S_xz_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const;
-//
-//        // normalized auto-correlation function in Fourier space for sigma_yz
-//        REAL_SCALAR S_yz_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const;
-//#endif
-//        
-//        void Write_field_slice(REAL_SCALAR *F, const char *fname);
-//        
-//    };
-
-
-
-
-//    struct StackingFaultNoise : public NoiseTraits<1>::NoiseContainerType
-//    {
-//        typedef typename NoiseTraits<1>::REAL_SCALAR REAL_SCALAR;
-//        typedef typename NoiseTraits<1>::GridSizeType GridSizeType;
-//        typedef typename NoiseTraits<1>::NoiseType NoiseType;
-//        typedef typename NoiseTraits<1>::NoiseContainerType NoiseContainerType;
-//        
-//        std::default_random_engine generator;
-//
-//
-//        
-//        StackingFaultNoise(const PolycrystallineMaterialBase& mat,
-//                           const NoiseTraitsBase::GridSizeType& gridSize,
-//                           const NoiseTraitsBase::GridSpacingType& gridSpacing_SI);
-//        
-//    };
-
-
-    
-
-
-
+    struct GlidePlaneNoise : public std::map<std::string,std::shared_ptr<GlidePlaneNoiseBase<2>>> // solid-solution
+    /*                    */,public std::map<std::string,std::shared_ptr<GlidePlaneNoiseBase<1>>> // stacking-fault
+    {
+        typedef typename Eigen::Matrix<double,3,1> VectorDim;
+        typedef typename NoiseTraitsBase::GridSizeType GridSizeType;
+        typedef std::map<std::string,std::shared_ptr<GlidePlaneNoiseBase<2>>> SolidSolutionNoiseContainer;
+        typedef std::map<std::string,std::shared_ptr<GlidePlaneNoiseBase<1>>> StackingFaultNoiseContainer;
+        
+        GlidePlaneNoise(const PolycrystallineMaterialBase& mat);
+        std::tuple<double,double,double> gridInterp(const Eigen::Matrix<double,2,1>& localPos) const;
+        std::tuple<double,double,double> gridVal(const Eigen::Array<int,2,1>& idx) const;
+        const SolidSolutionNoiseContainer& solidSolutionNoise() const;
+        SolidSolutionNoiseContainer& solidSolutionNoise();
+        const StackingFaultNoiseContainer& stackingFaultNoise() const;
+        StackingFaultNoiseContainer& stackingFaultNoise();
+    };
 
 }
 #endif

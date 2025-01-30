@@ -22,19 +22,7 @@ USF_SI=133e-3; 		# [J/m^2] (From MD) unstable stacking fault energy (X.-Y. Liu, 
 MSF_SI=476e-3; 		# [J/m^2] (From MD) maximum stacking fault energy (X.-Y. Liu, and J.B. Adams, 1998)
 
 # GlidePlane Noise
-glidePlaneNoise = xxxxx; 
-solidSolutionNoiseMode=0; # 0=no noise, 1= read noise, 2=compute noise
-stackingFaultNoiseMode=0; # 0=no noise
-gridSize=256 256; # size of grid on the glide plane
-gridSpacing_SI=1e-10 1e-10; # [m] spacing of grid on the glide plane
-solidSolutionNoiseFile_xz=../../../NoiseLibrary/noise_xz.vtk;
-solidSolutionNoiseFile_yz=../../../NoiseLibrary/noise_yz.vtk;
-spreadLstress_A=1; # add comment
-a_cai_A=1; # add comment
-seed=0; # add comment
-MSSS_SI=0.09e18;	        # [Pa^2] Mean Square Shear Stress 
-isfEnergyDensitySTD_SI = 10.827e-12; # [J/m] std of ISF energy density is this value/sqrt(area) of cell
-
+glidePlaneNoise = none; 
 
 # Vacancy diffusion (Ignored at this moment)
 dOmegav=0;		# [-]		Relative vacancy relaxation volume

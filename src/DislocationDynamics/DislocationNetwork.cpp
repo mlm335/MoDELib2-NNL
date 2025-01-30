@@ -693,22 +693,6 @@ else
             node.second.lock()->trySet_P(node.second.lock()->get_P()+node.second.lock()->get_V()*dt_in);
         }
         updateBoundaryNodes();
-        //    if(ddBase.isPeriodicDomain)
-        //    {
-        //        danglingBoundaryLoopNodes.clear();
-        //        for(auto& node : this->networkNodes())
-        //        {
-        //            node.second.lock()->trySet_P(node.second.lock()->get_P()+node.second.lock()->get_V()*dt_in);
-        //        }
-        //        updateBoundaryNodes();
-        //    }
-        //    else
-        //    {
-        //        for (auto& nodeIter : this->networkNodes())
-        //        {
-        //            nodeIter.second.lock()->set_P(nodeIter.second.lock()->get_P()+nodeIter.second.lock()->get_V()*dt_in);
-        //        }
-        //    }
         std::cout<<magentaColor<<std::setprecision(3)<<std::scientific<<" ["<<(std::chrono::duration<double>(std::chrono::system_clock::now()-t0)).count()<<" sec]."<<defaultColor<<std::endl;
     }
 

@@ -31,9 +31,7 @@ DVv=0;
 Udv_eV=0;
 
 # GlidePlane Noise
-solidSolutionNoiseMode=0; # 0=no noise, 1= read noise, 2=compute noise
-stackingFaultNoiseMode=0; # 0=no noise
-
+glidePlaneNoise = none; 
 
 # Second Phases
 enabledSecondPhases=;

@@ -21,20 +21,21 @@
 namespace model
 {
 
-    struct AnalyticalSolidSolutionNoiseExpression
+    struct AnalyticalSolidSolutionNoise: public GlidePlaneNoiseBase<2>
     {
         typedef typename NoiseTraits<2>::REAL_SCALAR REAL_SCALAR;
         typedef typename NoiseTraits<2>::COMPLEX COMPLEX;
+        typedef typename NoiseTraits<2>::GridSizeType GridSizeType;
         typedef typename NoiseTraitsBase::GridSpacingType GridSpacingType;
-
-        
+        typedef typename NoiseTraits<2>::NoiseType NoiseType;
+        typedef typename NoiseTraits<2>::NoiseContainerType NoiseContainerType;
+                
         const REAL_SCALAR a;
         const REAL_SCALAR a_cai;
         const double stressPrefactor;
-
-        AnalyticalSolidSolutionNoiseExpression(const REAL_SCALAR& a_in,const REAL_SCALAR& a_cai_in,const GridSpacingType& gridSpacing,const double& MSSS);
         
         static REAL_SCALAR Wk_Cai(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a) ;
+        static REAL_SCALAR Wk_Cai_squared(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a) ;
 
         // Cai spreading function
         static REAL_SCALAR W_Cai(REAL_SCALAR r2, REAL_SCALAR a) ;
@@ -49,32 +50,7 @@ namespace model
         // normalized auto-correlation function in Fourier space for sigma_yz
         REAL_SCALAR S_yz_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const;
 
-    };
-
-    struct AnalyticalSolidSolutionNoise: public AnalyticalSolidSolutionNoiseExpression
-    /*                                */,public GlidePlaneNoiseBase<2>
-    {
-
-        typedef typename NoiseTraits<2>::REAL_SCALAR REAL_SCALAR;
-        typedef typename NoiseTraits<2>::COMPLEX COMPLEX;
-        typedef typename NoiseTraits<2>::GridSizeType GridSizeType;
-        typedef typename NoiseTraitsBase::GridSpacingType GridSpacingType;
-        typedef typename NoiseTraits<2>::NoiseType NoiseType;
-        typedef typename NoiseTraits<2>::NoiseContainerType NoiseContainerType;
-        
-        int NX, NY, NZ;
-        REAL_SCALAR DX, DY, DZ;
-        REAL_SCALAR a;
-        REAL_SCALAR a_cai;
-        int seed;
-        //    int flag;
-        REAL_SCALAR LX, LY, LZ;
-        REAL_SCALAR DV;
-        int NR;
-        int NK;
-        REAL_SCALAR Norm;
-
-        AnalyticalSolidSolutionNoise(const PolycrystallineMaterialBase& mat,const std::string& tag, const int& seed,
+        AnalyticalSolidSolutionNoise(const std::string& tag, const int& seed,
                                     const GridSizeType& gridSize, const GridSpacingType& gridSpacing,
                                      const double& a_in,const double& a_Cai_in,const double& MSSS);
         

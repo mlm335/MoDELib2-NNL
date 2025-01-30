@@ -18,6 +18,7 @@
 
 #include <NoiseTraits.h>
 #include <UniformPeriodicGrid.h>
+#include <PolycrystallineMaterialBase.h>
 
 namespace model
 {
@@ -38,6 +39,8 @@ namespace model
         const int seed;
         const GridSizeType gridSize;
         const GridSpacingType gridSpacing;
+        const GridSpacingType gridLength;
+
 //        const size_t NK;
         // lattice basis1
         // lattice basis2
@@ -46,10 +49,11 @@ namespace model
                             const int& seed_in,
                             const NoiseTraitsBase::GridSizeType& gridSize_in,
                             const NoiseTraitsBase::GridSpacingType& gridSpacing_SI_in);
+        
         virtual ~GlidePlaneNoiseBase(){};
 
         void computeRealNoise();
-        void computeRealNoiseStatistics() const;
+        void computeRealNoiseStatistics(const PolycrystallineMaterialBase& mat) const;
         
         GridSizeType rowAndColIndices(const int& storageIndex) const;
         

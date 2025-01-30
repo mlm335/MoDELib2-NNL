@@ -26,27 +26,19 @@ setInputVariable('inputFiles/'+DDfile,'use_stochasticForce','0') # Langevin ther
 setInputVariable('inputFiles/'+DDfile,'alphaLineTension','0.1') # dimensionless scale factor in for line tension forces
 setInputVariable('inputFiles/'+DDfile,'Lmin','5')  # min segment length (in Burgers vector units)
 setInputVariable('inputFiles/'+DDfile,'Lmax','20')  # max segment length (in Burgers vector units)
-setInputVariable('inputFiles/'+DDfile,'outputFrequency','1')  # output frequency
-setInputVariable('inputFiles/'+DDfile,'outputQuadraturePoints','1')  # output quadrature data
+setInputVariable('inputFiles/'+DDfile,'outputFrequency','10')  # output frequency
+setInputVariable('inputFiles/'+DDfile,'outputQuadraturePoints','0')  # output quadrature data
 setInputVariable('inputFiles/'+DDfile,'glideSolverType','Galerkin')  # type of glide solver, or none
 setInputVariable('inputFiles/'+DDfile,'climbSolverType','none')  # type of clim solver, or none
-setInputVariable('inputFiles/'+DDfile,'Nsteps','10')  # number of simulation steps
-
-# Make a local copy of noise file, and modify that copy if necessary
-noiseFile='AnalyticalSolidSolutionNoise.txt'
-noiseFileTemplate='../../Library/GlidePlaneNoise/'+noiseFile;
-print("\033[1;32mCreating  noiseFile\033[0m")
-shutil.copy2(noiseFileTemplate,'inputFiles/'+noiseFile) # target filename is /dst/dir/file.ext
-#setInputVariable(noiseFile,'seed','1')
-setInputVariable('inputFiles/'+noiseFile,'MSSS_SI','0.45e18')
+setInputVariable('inputFiles/'+DDfile,'Nsteps','10000')  # number of simulation steps
+setInputVariable('inputFiles/'+DDfile,'crossSlipModel','1')  # crossSlipModel
 
 # Make a local copy of material file, and modify that copy if necessary
-materialFile='AlMg15.txt';
+materialFile='W.txt';
 materialFileTemplate='../../Library/Materials/'+materialFile;
 print("\033[1;32mCreating  materialFile\033[0m")
 shutil.copy2(materialFileTemplate,'inputFiles/'+materialFile)
-setInputVariable('inputFiles/'+materialFile,'enabledSlipSystems','Shockley')
-setInputVariable('inputFiles/'+materialFile,'glidePlaneNoise',noiseFile)
+setInputVariable('inputFiles/'+materialFile,'enabledSlipSystems','full<111>{110}')
 
 # Make a local copy of ElasticDeformation file, and modify that copy if necessary
 elasticDeformatinoFile='ElasticDeformation.txt';
@@ -63,25 +55,19 @@ shutil.copy2(meshFileTemplate,'inputFiles/'+meshFile)
 pf=PolyCrystalFile(materialFile);
 pf.absoluteTemperature=300;
 pf.meshFile=meshFile
-pf.grain1globalX1=np.array([0,1,1])     # global x1 axis. Overwritten if alignToSlipSystem0=true
-pf.grain1globalX3=np.array([-1,1,-1])    # global x3 axis. Overwritten if alignToSlipSystem0=true
-pf.boxEdges=np.array([[0,1,1],[2,1,-1],[-1,1,-1]]) # i-throw is the direction of i-th box edge
-pf.boxScaling=np.array([200,200,200]) # must be a vector of integers
+pf.boxScaling=np.array([2000,2000,2000]) # must be a vector of integers
 pf.X0=np.array([0,0,0]) # Centering unitCube mesh. Mesh nodes X are mapped to x=F*(X-X0)
 pf.periodicFaceIDs=np.array([-1])
 pf.write('inputFiles')
 
 # make a local copy of microstructure file, and modify that copy if necessary
-microstructureFile1='periodicDipoleIndividual.txt';
+microstructureFile1='prismaticLoopDensity.txt';
 microstructureFileTemplate='../../Library/Microstructures/'+microstructureFile1;
 print("\033[1;32mCreating  microstructureFile\033[0m")
 shutil.copy2(microstructureFileTemplate,'inputFiles/'+microstructureFile1) # target filename is /dst/dir/file.ext
-setInputVector('inputFiles/'+microstructureFile1,'slipSystemIDs',np.array([0,1]),'slip system IDs for each dipole')
-setInputVector('inputFiles/'+microstructureFile1,'exitFaceIDs',np.array([4,4]),'4 is for edge, 2 for screw')
-setInputMatrix('inputFiles/'+microstructureFile1,'dipoleCenters',np.array([[0.0,0.0,0.0],[0.0,0.0,0.0]]))
-setInputVector('inputFiles/'+microstructureFile1,'nodesPerLine',np.array([10,10]),'number of extra nodes on each dipole')
-setInputVector('inputFiles/'+microstructureFile1,'dipoleHeights',np.array([200,200]),'height of each dipole, in number of planes')
-setInputVector('inputFiles/'+microstructureFile1,'glideSteps',np.array([10.0,30.0]),'step of each dipole in the glide plane')
+setInputVariable('inputFiles/'+microstructureFile1,'targetDensity_SI','1e13')
+setInputVariable('inputFiles/'+microstructureFile1,'radiusDistributionMean_SI','1e-07')
+setInputVariable('inputFiles/'+microstructureFile1,'radiusDistributionStd_SI','0.0')
 
 print("\033[1;32mCreating  initialMicrostructureFile\033[0m")
 with open('inputFiles/initialMicrostructure.txt', "w") as initialMicrostructureFile:

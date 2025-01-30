@@ -20,20 +20,13 @@ namespace model
                                                 const int& seed_in,
                                                 const NoiseTraitsBase::GridSizeType& gridSize_in,
                                                 const NoiseTraitsBase::GridSpacingType& gridSpacing_in):
-    /*init*/ UniformPeriodicGrid<2>(gridSize_in,gridSpacing_in)
+    /*init*/ UniformPeriodicGrid<2>(gridSize_in.template segment<2>(0),gridSpacing_in.template segment<2>(0))
     /*init*/,tag(tag_in)
     /*init*/,seed(seed_in)
     /*init*/,gridSize(gridSize_in)
     /*init*/,gridSpacing(gridSpacing_in)
-//    /*init*/,NK(gridSize(0)*gridSize(1)*(gridSize(2)/2+1))
+    /*init*/,gridLength(gridSize.template cast<double>()*gridSpacing)
     {
-//        std::cout<<"gridSize="<<gridSize<<std::endl;
-//        std::cout<<"gridSize(2)="<<gridSize(2)<<std::endl;
-        
-//        THIS IS WRONG BECAUSE gridSize(2) must be 64!!
-        
-        std::cout<<greenBoldColor<<"Creating GlidePlaneNoiseBase "+tag<<defaultColor<<std::endl;
-        
     }
 
     template <int N>
@@ -59,48 +52,32 @@ namespace model
     template <int N>
     void GlidePlaneNoiseBase<N>::computeRealNoise()
     {
-        std::cout<<tag<<" computing noise "<<std::flush;
+        std::cout<<greenBoldColor<<"Computing "+tag<<defaultColor<<std::flush;
         const auto t0= std::chrono::system_clock::now();
 
-        const int NX(gridSize(0));
-        const int NY(gridSize(1));
-        const int NZ(64);
+        const int& NX(gridSize(0));
+        const int& NY(gridSize(1));
+        const int& NZ(gridSize(2));
         const int NK(NX*NY*(NZ/2+1));
         const int NR(NX*NY*NZ);
-        const double LX(NX*gridSpacing(0));
-        const double LY(NY*gridSpacing(1));
-        const double LZ(NZ*0.5*(gridSpacing(0)+gridSpacing(1)));
-
+        const double& LX(gridLength(0));
+        const double& LY(gridLength(1));
+        const double& LZ(gridLength(2));
 
 #ifdef _MODEL_GLIDE_PLANE_NOISE_GENERATOR_
         
-
-        
-    // Apply Gaussian noise to kCorrelations
-    std::default_random_engine generator(seed);
-    std::normal_distribution<REAL_SCALAR> distribution(0.0,1.0);
-    
-//        std::cout<<"here 1"<<std::endl;
-        
+    // Allocate k-space and r-space vectors
     std::vector<COMPLEX*> kNoisyCorrelations;
     std::vector<REAL_SCALAR*> rNoisyCorrelations;
-//    std::vector<fftw_plan> fftPlans;
     for(int n=0;n<N;++n)
     {
         kNoisyCorrelations.push_back((COMPLEX*) fftw_malloc(sizeof(COMPLEX)*NK));
         rNoisyCorrelations.push_back((REAL_SCALAR*) fftw_malloc(sizeof(REAL_SCALAR)*NR));
     }
-        
-//        std::cout<<"here 2"<<std::endl;
     
-//    for(int n=0;n<N;++n)
-//    {
-//        fftPlans.push_back(fftw_plan_dft_c2r_3d(gridSize(0), gridSize(1), gridSize(2), reinterpret_cast<fftw_complex*>(kNoisyCorrelations[n]), rNoisyCorrelations[n], FFTW_ESTIMATE));
-//    }
-        
-//        std::cout<<"here 3"<<std::endl;
-    
-//        std::cout<<", randomizing "<<std::flush;
+    // Retreive k-correlations and randomize them
+    std::default_random_engine generator(seed);
+    std::normal_distribution<REAL_SCALAR> distribution(0.0,1.0);
     for(int i=0; i<NX; i++)
     {
         for(int j=0; j<NY; j++)
@@ -150,49 +127,17 @@ namespace model
                     kNoisyCorrelations[n][ind]=sqrt(kCorr[n]/kCorrFactor)*(Nk_yz+Mk_yz*COMPLEX(0.0,1.0));
 //                    std::cout<<kNoisyCorrelations[n][ind]<<std::endl;
                 }
-//                if(k==0 || k==NZ/2) // /!\ special case for k=0 and k==NZ/2 because of folding of C2R Fourier transform
-//                {
-//                    for(int n=0;n<N;++n)
-//                    {
-//                        kNoisyCorrelations[n][ind]=sqrt(kCorr[n])*(Nk_yz+Mk_yz*COMPLEX(0.0,1.0));
-//                    }
-//                }
-////                else if(k==NZ/2)
-////                {
-////                    for(int n=0;n<N;++n)
-////                    {
-////                        kNoisyCorrelations[n][ind]=sqrt(kCorr[n])*(Nk_yz+Mk_yz*COMPLEX(0.0,1.0));
-////                    }
-////                }
-//                else
-//                {
-//                    for(int n=0;n<N;++n)
-//                    {
-//                        kNoisyCorrelations[n][ind]=sqrt(kCorr[n]/2.0)*(Nk_yz+Mk_yz*COMPLEX(0.0,1.0));
-//                    }
-//                }
             }
         }
     }
-    
-//        std::cout<<"here 4"<<std::endl;
-        
+            
     // Compute Real noise
-        std::cout<<", ifft "<<std::flush;
     for(int n=0;n<N;++n)
     {
         kNoisyCorrelations[n][0]=0;
-//        std::cout<<rNoisyCorrelations[n][120000]<<std::endl;;
-//        std::cout<<kNoisyCorrelations[n][120000]<<std::endl;;
-//        std::cout<<"here 41"<<std::endl;
         fftw_plan nPlan = fftw_plan_dft_c2r_3d(NX, NY, NZ, reinterpret_cast<fftw_complex*>(kNoisyCorrelations[n]), rNoisyCorrelations[n], FFTW_ESTIMATE);
-        //        fftPlans.push_back(fftw_plan_dft_c2r_3d(gridSize(0), gridSize(1), gridSize(2), reinterpret_cast<fftw_complex*>(kNoisyCorrelations[n]), rNoisyCorrelations[n], FFTW_ESTIMATE));
-
-        
         fftw_execute(nPlan);
     }
-        
-//        std::cout<<"here 5"<<std::endl;
     
     // Store Real noise
     this->reserve(NX*NY);
@@ -202,7 +147,6 @@ namespace model
         for(int j=0;j<NY;j++)
         {
             const int ind = NY*NZ*i + j*NZ + k;
-            
             Eigen::Matrix<REAL_SCALAR,1,N> temp;
             for(int n=0;n<N;++n)
             {
@@ -211,18 +155,15 @@ namespace model
             this->push_back(NoiseTraits<N>::fromMatrix(temp));
         }
     }
-//        std::cout<<"here 6"<<std::endl;
+
 #else
-        
-//        std::cout<<"here 7"<<std::endl;
     this->resize(NX*NY,NoiseTraits<N>::Zero());
-//        std::cout<<"here 8"<<std::endl;
 #endif
         std::cout<<greenColor<<" ["<<(std::chrono::duration<double>(std::chrono::system_clock::now()-t0)).count()<<" sec]"<<defaultColor<<std::endl;
     }
 
     template <int N>
-    void GlidePlaneNoiseBase<N>::computeRealNoiseStatistics() const
+    void GlidePlaneNoiseBase<N>::computeRealNoiseStatistics(const PolycrystallineMaterialBase& mat) const
     {
         // Compute Statistics
         NoiseType ave(NoiseTraits<N>::Zero());
@@ -236,14 +177,13 @@ namespace model
         for(const auto& valArr: noiseVector())
         {
             var+=NoiseTraits<N>::squared(valArr-ave);
-//            var+= ((valArr-ave).array()*(valArr-ave).array()).matrix();
         }
         var/=noiseVector().size();
         
         std::cout<<"gridSize= "<<gridSize.transpose()<<std::endl;
         std::cout<<"gridSpacing= "<<gridSpacing.transpose()<<std::endl;
-        std::cout<<"noiseAverage="<<ave<<std::endl;
-        std::cout<<"noiseVariance="<<var<<std::endl;
+        std::cout<<"noiseAverage="<<ave*mat.mu_SI<<" [Pa]"<<std::endl;
+        std::cout<<"noiseVariance="<<var*std::pow(mat.mu_SI,2)<<" [Pa^2]"<<std::endl;
     }
 
     template struct GlidePlaneNoiseBase<1>;

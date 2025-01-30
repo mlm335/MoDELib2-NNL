@@ -12,10 +12,10 @@ Nsteps=250;		# total number of simulation steps
 startAtTimeStep = -1;  # time step for restart. -1 means last available step in file F/F_0.txt
 
 ######################################
-# Settings for simulationType=1 (finite sample with FEM)
-stepsBetweenBVPupdates = 1;
-use_directSolver_FEM=1;
-solverTolerance=1.0e-7;
+# Settings for ElasticDeformation
+stepsBetweenBVPupdates = 1; # frequency of FEM updates
+use_directSolver_FEM=1; # direct vs iterative solver
+solverTolerance=1.0e-7; # tolerance for iterative solver
 # Surface nucleation model (0=no nucleation)
 surfaceNucleationModel=0;
 
@@ -33,7 +33,7 @@ inertiaReliefPenaltyFactor=1e-3;
 # TIME STEPPING
 timeSteppingMethod=adaptive; # can be "fixed" or "adaptive". dt=dtMax if timeIntegrationMethod=fixed. dt=min(dxMax/vMax,dtMax) if timeIntegrationMethod=adaptive
 dtMax=1.0e25; # max DD time step 
-dxMax=1; # max nodal displacement in adaptive stepping
+dxMax=10; # max nodal displacement in adaptive stepping
 use_velocityFilter=1;
 velocityReductionFactor=0.75;
 use_stochasticForce=0;

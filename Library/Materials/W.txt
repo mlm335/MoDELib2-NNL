@@ -27,9 +27,7 @@ a2=2.32;			# [-]		non-Schmid coefficient
 a3=4.29;			# [-]		non-Schmid coefficient
 
 # GlidePlane Noise
-solidSolutionNoiseMode=0; # 0=no noise, 1= read noise, 2=compute noise
-stackingFaultNoiseMode=0; # 0=no noise
-
+glidePlaneNoise = none; 
 
 # Vacancy diffusion
 dOmegav=0;	# [-]	Relative vacancy relaxation volume

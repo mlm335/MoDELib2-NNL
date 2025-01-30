@@ -22,8 +22,7 @@ USF_SI= 290e-3; # [J/m^2]	 unstable stacking fault energy (Wu et al., Applied Su
 MSF_SI=1100e-3; # [J/m^2]	 maximum stacking fault energy (??)
 
 # GlidePlane Noise
-solidSolutionNoiseMode=0; # 0=no noise, 1= read noise, 2=compute noise
-stackingFaultNoiseMode=0; # 0=no noise
+glidePlaneNoise = none; 
 
 # Vacancy diffusion
 dOmegav=0;	# [-]	Relative vacancy relaxation volume

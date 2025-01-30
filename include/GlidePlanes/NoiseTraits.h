@@ -18,8 +18,8 @@ namespace model
     {
         typedef double REAL_SCALAR;
         typedef std::complex<double> COMPLEX;
-        typedef Eigen::Array<int,2,1> GridSizeType;
-        typedef Eigen::Array<double,2,1> GridSpacingType;
+        typedef Eigen::Array<int,3,1> GridSizeType;
+        typedef Eigen::Array<double,3,1> GridSpacingType;
         
         static int LittleEndian();
         static float ReverseFloat(const float& inFloat);

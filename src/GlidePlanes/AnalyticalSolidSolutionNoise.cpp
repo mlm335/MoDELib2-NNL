@@ -14,24 +14,38 @@
 namespace model
 {
 
-AnalyticalSolidSolutionNoiseExpression::AnalyticalSolidSolutionNoiseExpression(const REAL_SCALAR& a_in,const REAL_SCALAR& a_cai_in,const GridSpacingType& gridSpacing,const double& MSSS):
-/* init */ a(a_in)
-/* init */,a_cai(a_cai_in)
-/* init */,stressPrefactor(MSSS*120.0*M_PI*sqrt(M_PI)*a*a*a/(gridSpacing.prod()))
-{
-//    std::cout<<"stressPrefactor="<<stressPrefactor<<std::endl;
-//    std::cout<<"a="<<a<<std::endl;
-//    std::cout<<"a_cai="<<a_cai<<std::endl;    
-}
+//AnalyticalSolidSolutionNoise::AnalyticalSolidSolutionNoise(const REAL_SCALAR& a_in,const REAL_SCALAR& a_cai_in,const GridSpacingType& gridSpacing,const double& MSSS):
+///* init */ a(a_in)
+///* init */,a_cai(a_cai_in)
+///* init */,stressPrefactor(MSSS*120.0*M_PI*sqrt(M_PI)*a*a*a/(gridSpacing.prod()))
+//{
+////    std::cout<<"stressPrefactor="<<stressPrefactor<<std::endl;
+////    std::cout<<"a="<<a<<std::endl;
+////    std::cout<<"a_cai="<<a_cai<<std::endl;    
+//}
 
-// Cai doubly-convoluted spreading function in Fourier space
-typename AnalyticalSolidSolutionNoiseExpression::REAL_SCALAR AnalyticalSolidSolutionNoiseExpression::Wk_Cai(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a)
+// Cai's doubly-convoluted spreading function in Fourier space
+typename AnalyticalSolidSolutionNoise::REAL_SCALAR AnalyticalSolidSolutionNoise::Wk_Cai(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a)
 {
     REAL_SCALAR k = sqrt(kx*kx + ky*ky + kz*kz);
-    if(k>0)
+    if(k>0.0)
     {
         return a*k*sqrt(0.5*boost::math::cyl_bessel_k(2,a*k));
-//            return a*k*sqrt(0.5*std::cyl_bessel_k(2,a*k));
+    }
+    else
+    {
+        return 1.;
+    }
+}
+
+// Square of Cai's doubly-convoluted spreading function in Fourier space
+typename AnalyticalSolidSolutionNoise::REAL_SCALAR AnalyticalSolidSolutionNoise::Wk_Cai_squared(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a)
+{
+    const REAL_SCALAR k2(kx*kx + ky*ky + kz*kz);
+    const REAL_SCALAR k(sqrt(k2));
+    if(k2>0.0)
+    {
+        return a*a*k2*0.5*boost::math::cyl_bessel_k(2,a*k);
     }
     else
     {
@@ -40,32 +54,32 @@ typename AnalyticalSolidSolutionNoiseExpression::REAL_SCALAR AnalyticalSolidSolu
 }
 
 // Cai spreading function
-typename AnalyticalSolidSolutionNoiseExpression::REAL_SCALAR AnalyticalSolidSolutionNoiseExpression::W_Cai(REAL_SCALAR r2, REAL_SCALAR a)
+typename AnalyticalSolidSolutionNoise::REAL_SCALAR AnalyticalSolidSolutionNoise::W_Cai(REAL_SCALAR r2, REAL_SCALAR a)
 {
     return 15.*a*a*a*a/(8.*M_PI*pow(r2+a*a,7./2.));
 }
 
-typename AnalyticalSolidSolutionNoiseExpression::REAL_SCALAR AnalyticalSolidSolutionNoiseExpression::W_t_Cai(REAL_SCALAR r2, REAL_SCALAR a)
+typename AnalyticalSolidSolutionNoise::REAL_SCALAR AnalyticalSolidSolutionNoise::W_t_Cai(REAL_SCALAR r2, REAL_SCALAR a)
 {
     return 0.3425*W_Cai(r2,0.9038*a) + 0.6575*W_Cai(r2,0.5451*a);
 }
 
 // normalized auto-correlation function in Fourier space for sigma_xy
-typename AnalyticalSolidSolutionNoiseExpression::REAL_SCALAR AnalyticalSolidSolutionNoiseExpression::S_xy_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const
+typename AnalyticalSolidSolutionNoise::REAL_SCALAR AnalyticalSolidSolutionNoise::S_xy_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const
 {
     REAL_SCALAR k2 = kx*kx + ky*ky + kz*kz;
     return stressPrefactor*(kx*kx*ky*ky)/(k2*k2)*exp(-a*a*k2);
 }
 
 // normalized auto-correlation function in Fourier space for sigma_xz
-typename AnalyticalSolidSolutionNoiseExpression::REAL_SCALAR AnalyticalSolidSolutionNoiseExpression::S_xz_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const
+typename AnalyticalSolidSolutionNoise::REAL_SCALAR AnalyticalSolidSolutionNoise::S_xz_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const
 {
     REAL_SCALAR k2 = kx*kx + ky*ky + kz*kz;
     return stressPrefactor*(kx*kx*kz*kz)/(k2*k2)*exp(-a*a*k2);
 }
 
 // normalized auto-correlation function in Fourier space for sigma_yz
-typename AnalyticalSolidSolutionNoiseExpression::REAL_SCALAR AnalyticalSolidSolutionNoiseExpression::S_yz_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const
+typename AnalyticalSolidSolutionNoise::REAL_SCALAR AnalyticalSolidSolutionNoise::S_yz_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const
 {
     REAL_SCALAR k2 = kx*kx + ky*ky + kz*kz;
     return stressPrefactor*(ky*ky*kz*kz)/(k2*k2)*exp(-a*a*k2);
@@ -75,16 +89,19 @@ typename AnalyticalSolidSolutionNoiseExpression::REAL_SCALAR AnalyticalSolidSolu
 
 //#ifdef _MODEL_GLIDE_PLANE_NOISE_GENERATOR_
 
-AnalyticalSolidSolutionNoise::AnalyticalSolidSolutionNoise(const PolycrystallineMaterialBase& mat,
-                                                           const std::string& tag,
+AnalyticalSolidSolutionNoise::AnalyticalSolidSolutionNoise(const std::string& tag,
                                                            const int& seed,
                                                            const GridSizeType& gridSize,
                                                            const GridSpacingType& gridSpacing,
                                                            const double& a_in,
                                                            const double& a_Cai_in,
                                                            const double& MSSS) :
-/*init*/ AnalyticalSolidSolutionNoiseExpression(a_in,a_Cai_in,gridSpacing,MSSS)
-/*init*/,GlidePlaneNoiseBase<2>("AnalyticalSolidSolutionNoise"+tag,seed,gridSize,gridSpacing)
+///*init*/ AnalyticalSolidSolutionNoise(a_in,a_Cai_in,gridSpacing,MSSS)
+/* init */ GlidePlaneNoiseBase<2>("AnalyticalSolidSolutionNoise"+tag,seed,gridSize,gridSpacing)
+/* init */,a(a_in)
+/* init */,a_cai(a_Cai_in)
+/* init */,stressPrefactor(MSSS*120.0*M_PI*sqrt(M_PI)*a*a*a/(gridLength.prod()))
+
 ///*init*/,NX(_gridSize(0))     // dimension along x
 ///*init*/,NY(_gridSize(1))     // dimension along y
 ///*init*/,NZ(64)      // dimension along z
@@ -104,8 +121,6 @@ AnalyticalSolidSolutionNoise::AnalyticalSolidSolutionNoise(const Polycrystalline
 ///*init*/,Norm(1./REAL_SCALAR(NR))
 {
     
-    this->computeRealNoise();
-    this->computeRealNoiseStatistics();
 
     
 //    std::cout<<"Computing SolidSolutionNoise..."<<std::endl;
@@ -268,7 +283,8 @@ std::array<AnalyticalSolidSolutionNoise::COMPLEX,2> AnalyticalSolidSolutionNoise
     if(a_cai>0.0)
     {
 //        const double wkc(Wk_Cai(kv(0),kv(1),kv(2), a_cai));
-        const double wkc2(std::pow(Wk_Cai(kv(0),kv(1),kv(2), a_cai),2)); // using the square because this is before the square root
+//        const double wkc2(std::pow(Wk_Cai(kv(0),kv(1),kv(2), a_cai),2)); // using the square because this is before the square root
+        const double wkc2(Wk_Cai_squared(kv(0),kv(1),kv(2), a_cai)); // using the square because this is before the square root
 
         temp[0]*=wkc2;
         temp[1]*=wkc2;
