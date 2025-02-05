@@ -216,7 +216,7 @@ PeriodicDipoleGenerator::PeriodicDipoleGenerator(const PeriodicDipoleDensitySpec
             }
             
             const int grainID(found.second->region->regionID);
-            assert(mg.ddBase.poly.grains().size()==1 && "Periodic dislocations only supported for single crystals");
+            assert(mg.ddBase.poly.grains.size()==1 && "Periodic dislocations only supported for single crystals");
             const auto& grain(mg.ddBase.poly.grain(grainID));
 
             if(rSS<int(grain.singleCrystal->slipSystems().size()))

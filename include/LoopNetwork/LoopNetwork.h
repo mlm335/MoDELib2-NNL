@@ -262,6 +262,27 @@ namespace model
             loop->update();
         }
         
+        void insertLoop(const std::shared_ptr<LoopType>& loop,
+                        const std::deque<std::shared_ptr<LoopNodeType>> nodes)
+        {/*!@param[in] nodes in the loop
+          * @param[loopInput] Loop constructor arguments
+          *
+          * Inserts a Loop connecting the sequence of nodes,
+          * The loop constructor arguments loopInput
+          * are forwarded to the loop constructor.
+          */
+            
+            for(size_t k=0;k<nodes.size();++k)
+            {
+                const size_t next=k+1<nodes.size()? k+1 : 0;
+                connect(nodes[k],nodes[next],loop);
+            }
+            
+            assert(loop->isLoop() && "Not a loop.");
+            
+            loop->update();
+        }
+        
         void deleteLoop(const size_t& loopID)
         {
             for(typename LoopLinkContainerType::const_iterator loopIter=loopLinks().begin();

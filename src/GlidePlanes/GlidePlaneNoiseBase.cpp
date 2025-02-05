@@ -122,10 +122,7 @@ namespace model
                 const auto kCorr(kCorrelations(kv,kvID));
                 for(int n=0;n<N;++n)
                 {
-//                    std::cout<<kCorr[n]/kCorrFactor<<std::endl;
-//                    kNoisyCorrelations[n][ind]=sqrt(kCorr[n]/kCorrFactor);
                     kNoisyCorrelations[n][ind]=sqrt(kCorr[n]/kCorrFactor)*(Nk_yz+Mk_yz*COMPLEX(0.0,1.0));
-//                    std::cout<<kNoisyCorrelations[n][ind]<<std::endl;
                 }
             }
         }
@@ -185,6 +182,35 @@ namespace model
         std::cout<<"noiseAverage="<<ave*mat.mu_SI<<" [Pa]"<<std::endl;
         std::cout<<"noiseVariance="<<var*std::pow(mat.mu_SI,2)<<" [Pa^2]"<<std::endl;
     }
+        
+        //    void AnalyticalSolidSolutionNoise::Write_field_slice(REAL_SCALAR *F, const char *fname)
+        //    {
+        //        FILE *OutFile=fopen(fname,"w");
+        //
+        //        fprintf(OutFile,"# vtk DataFile Version 2.0\n");
+        //        fprintf(OutFile,"iter %d\n",0);
+        //        fprintf(OutFile,"BINARY\n");
+        //        fprintf(OutFile,"DATASET STRUCTURED_POINTS\n");
+        //        fprintf(OutFile,"ORIGIN \t %f %f %f\n",0.,0.,0.);
+        //        fprintf(OutFile,"SPACING \t %f %f %f\n", DX, DY, DZ);
+        //        fprintf(OutFile,"DIMENSIONS \t %d %d %d\n", NX, NY, 1);
+        //        fprintf(OutFile,"POINT_DATA \t %d\n",NX*NY);
+        //        fprintf(OutFile,"SCALARS \t volume_scalars double 1\n");
+        //        fprintf(OutFile,"LOOKUP_TABLE \t default\n");
+        //
+        //        for(int i=0;i<NX;i++)
+        //        {
+        //            for(int j=0;j<NY;j++)
+        //            {
+        //                const int k=0;
+        //                const int ind = NY*NZ*i + j*NZ + k;
+        //                const double temp=NoiseTraitsBase::ReverseDouble(double(F[ind]));
+        //                fwrite(&temp, sizeof(double), 1, OutFile);
+        //            }
+        //        }
+        //
+        //        fclose(OutFile);
+        //    }
 
     template struct GlidePlaneNoiseBase<1>;
     template struct GlidePlaneNoiseBase<2>;

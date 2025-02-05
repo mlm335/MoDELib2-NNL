@@ -35,10 +35,11 @@ namespace model
         typedef typename TraitsType::VectorDim VectorDim;
         typedef std::tuple<std::shared_ptr<NetworkNodeType>,std::shared_ptr<NetworkNodeType>,size_t,size_t> CrossSlipTupleType;
         typedef std::deque<CrossSlipTupleType> CrossSlipContainerType;
+        typedef std::deque<std::pair<std::deque<std::shared_ptr<LoopNodeType>>,int>> CrossSlipBranchContainerType;
         
         DislocationNetworkType& DN; //! A reference to the DislocationNetwork
 //        CrossSlipContainerType crossSlipDeq;
-        std::deque<std::pair<std::deque<std::shared_ptr<LoopNodeType>>,int>> csNodes;
+        CrossSlipBranchContainerType csNodes;
         
     public:
         

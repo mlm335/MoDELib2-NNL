@@ -128,6 +128,7 @@ namespace model
                                         bndLoopNodes.emplace(bndNode->sID,bndNode->periodicPrev()->sID,bndNode->periodicNext()->sID);
                                     }
                                 }
+                                std::cout<<"Removing LoopNode"<<loopN->tag()<<std::endl;
                                 DN.removeLoopNode(loopN->sID);
                                 removedLoopNodes.insert(loopN);
                                 Nremoved++;

@@ -26,11 +26,12 @@ setInputVariable('inputFiles/'+DDfile,'use_stochasticForce','0') # Langevin ther
 setInputVariable('inputFiles/'+DDfile,'alphaLineTension','0.1') # dimensionless scale factor in for line tension forces
 setInputVariable('inputFiles/'+DDfile,'Lmin','5')  # min segment length (in Burgers vector units)
 setInputVariable('inputFiles/'+DDfile,'Lmax','20')  # max segment length (in Burgers vector units)
-setInputVariable('inputFiles/'+DDfile,'outputFrequency','1')  # output frequency
+setInputVariable('inputFiles/'+DDfile,'outputFrequency','10')  # output frequency
 setInputVariable('inputFiles/'+DDfile,'outputQuadraturePoints','1')  # output quadrature data
+setInputVariable('inputFiles/'+DDfile,'computeElasticEnergyPerLength','1')  # output quadrature data
 setInputVariable('inputFiles/'+DDfile,'glideSolverType','Galerkin')  # type of glide solver, or none
 setInputVariable('inputFiles/'+DDfile,'climbSolverType','none')  # type of clim solver, or none
-setInputVariable('inputFiles/'+DDfile,'Nsteps','10')  # number of simulation steps
+setInputVariable('inputFiles/'+DDfile,'Nsteps','1000')  # number of simulation steps
 
 # Make a local copy of noise file, and modify that copy if necessary
 noiseFile='AnalyticalSolidSolutionNoise.txt'
@@ -66,7 +67,7 @@ pf.meshFile=meshFile
 pf.grain1globalX1=np.array([0,1,1])     # global x1 axis. Overwritten if alignToSlipSystem0=true
 pf.grain1globalX3=np.array([-1,1,-1])    # global x3 axis. Overwritten if alignToSlipSystem0=true
 pf.boxEdges=np.array([[0,1,1],[2,1,-1],[-1,1,-1]]) # i-throw is the direction of i-th box edge
-pf.boxScaling=np.array([200,200,200]) # must be a vector of integers
+pf.boxScaling=np.array([200,200,100]) # must be a vector of integers
 pf.X0=np.array([0,0,0]) # Centering unitCube mesh. Mesh nodes X are mapped to x=F*(X-X0)
 pf.periodicFaceIDs=np.array([-1])
 pf.write('inputFiles')

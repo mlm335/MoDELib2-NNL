@@ -1,6 +1,7 @@
 #!/bin/bash
+echo "Renaming png files in folder: $1"
 k=0;
-for i in `find ../evl -name img_\*.png  |sort -k1.12 -n  `
+for i in `find . -name img_\*.png  |sort -k1.12 -n  `
 # the option "-k1.x -n" means that the files are sorted using the x-th column in
 # the filename. Note "../evl/img_" are 11 characters, so the 12-th is the ID
 do

@@ -70,21 +70,24 @@ namespace model
             {
                 const auto& grain(**link.grains().begin());
                 const auto pki=link.pkIntegral();
+                const double pkGlide=std::fabs((pki-pki.dot(slipSystem->unitNormal)*slipSystem->unitNormal).norm());
+
                 std::map<double,int> ssMap;
                 for(size_t s=0;s<grain.singleCrystal->slipSystems().size();++s)
                 {
                     const auto& crossSlipSystem(grain.singleCrystal->slipSystems()[s]);
                     if((loop->flow()-crossSlipSystem->s).squaredNorm()==0)
                     {
-                        const double pkGlide=(pki-pki.dot(crossSlipSystem->unitNormal)*crossSlipSystem->unitNormal).norm();
-                        ssMap.emplace(pkGlide,s);
+                        const double pkCross=std::fabs((pki-pki.dot(crossSlipSystem->unitNormal)*crossSlipSystem->unitNormal).norm());
+                        ssMap.emplace(pkCross,s);
                     }
                 }
                 
                 if(ssMap.size())
                 {
                     const auto& crossSlipSystem(grain.singleCrystal->slipSystems()[ssMap.rbegin()->second]);
-                    if(slipSystem->unitNormal.cross(crossSlipSystem->unitNormal).squaredNorm()>FLT_EPSILON)
+                    if(slipSystem->unitNormal.cross(crossSlipSystem->unitNormal).squaredNorm()>FLT_EPSILON
+                       && ssMap.rbegin()->first>1.1*pkGlide)
                     {// highest glide PK-force is not on current slip system
                         return std::make_pair(true,std::make_pair(grain.grainID,ssMap.rbegin()->second));
                     }

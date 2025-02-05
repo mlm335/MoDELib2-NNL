@@ -32,7 +32,6 @@ namespace model
         typedef typename TypeTraits<DislocationNetworkType>::LoopType LoopType;
         typedef Eigen::Matrix<double,dim,1> VectorDim;
         typedef Eigen::Matrix<double,dim-1,1> VectorLowerDim;
-//        typedef typename TypeTraits<DislocationNetworkType>::NetworkLinkContainerType NetworkLinkContainerType;
         typedef typename NetworkLinkType::KeyType KeyType;
         typedef std::tuple<KeyType,KeyType,SegmentSegmentDistance<dim>> IntersectionType;
         typedef std::deque<IntersectionType> IntersectionTypeContainerType;

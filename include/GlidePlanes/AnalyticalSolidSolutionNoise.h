@@ -54,12 +54,8 @@ namespace model
                                     const GridSizeType& gridSize, const GridSpacingType& gridSpacing,
                                      const double& a_in,const double& a_Cai_in,const double& MSSS);
         
-        
         std::array<COMPLEX,2> kCorrelations(const Eigen::Matrix<double,3,1>& kv,const Eigen::Matrix<int,3,1>& kvID) const override;
 
-        
-//        void Write_field_slice(REAL_SCALAR *F, const char *fname);
-        
     };
 
 }

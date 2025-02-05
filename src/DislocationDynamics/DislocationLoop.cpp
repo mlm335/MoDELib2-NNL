@@ -41,7 +41,6 @@ namespace model
     template <int dim, short unsigned int corder>
     void DislocationLoop<dim,corder>::crossSlipBranches(std::deque<std::pair<std::deque<std::shared_ptr<LoopNodeType>>,int>>& csNodes) const
     {
-        
         std::deque<std::deque<std::pair<const LoopLinkType*,int>>> csBranches;
         if(this->network().crossSlipModel)
         {
@@ -51,31 +50,24 @@ namespace model
                 if(link->hasNetworkLink())
                 {
                     const auto isCSLink(this->network().crossSlipModel->isCrossSlipLink(*link->networkLink()));
-                    //std::cout<<isCSLink.first<<", "<<isCSLink.second.first<<", "<<isCSLink.second.second<<std::endl;
                     
                     if(isCSLink.first)
                     {// a cross-slip segment
                         if(currentBranch.empty())
                         {// start of new branch
                             currentBranch.emplace_back(link,isCSLink.second.second);
-                            //std::cout<<"A"<<std::endl;
-                            
                         }
                         else
                         {// existing branch
                             if(currentBranch.back().second==isCSLink.second.second)
                             {
                                 currentBranch.emplace_back(link,isCSLink.second.second);
-                                //std::cout<<"B"<<std::endl;
-                                
                             }
                             else
                             {// close, store, and push to currentBranch,
                                 csBranches.push_back(currentBranch);
                                 currentBranch.clear();
                                 currentBranch.emplace_back(link,isCSLink.second.second);
-                                //std::cout<<"C"<<std::endl;
-                                
                             }
                         }
                     }
@@ -85,7 +77,6 @@ namespace model
                         {// close and store branch if not empty
                             csBranches.push_back(currentBranch);
                             currentBranch.clear();
-                            //std::cout<<"D"<<std::endl;
                         }
                     }
                 }
@@ -94,19 +85,15 @@ namespace model
                     if(!currentBranch.empty())
                     {// close and store branch if not empty
                         currentBranch.emplace_back(link,currentBranch.back().second);
-                        //std::cout<<"E"<<std::endl;
                     }
                 }
-                
             }
             if(!currentBranch.empty())
             {// close and store branch if not empty
                 csBranches.push_back(currentBranch);
                 currentBranch.clear();
-                //std::cout<<"F"<<std::endl;
             }
             
-            //std::cout<<"Loop "<<this->tag()<<", csBranches.size()="<<csBranches.size()<<std::endl;
             if(csBranches.size()>1)
             {// Inserted two or more branches. Merge last and first branch if possible
                 if(   csBranches[0].front().first->prev==csBranches.back().back().first
@@ -117,27 +104,17 @@ namespace model
                     {
                         csBranches[0].push_front(*rIter);
                     }
-                    
-                    //                    for(const auto& pair : csBranches.front())
-                    //                    {
-                    //                        csBranches.back().push_back(pair);
-                    //                    }
                     csBranches.pop_back();
                 }
             }
             
-            //std::cout<<"Adding csNodes"<<std::endl;
             for(const auto& branch : csBranches)
             {
                 if(branch.size())
                 {
-                    //std::cout<<"A"<<std::endl;
-                    
                     csNodes.emplace_back(std::deque<std::shared_ptr<LoopNodeType>>(),branch.back().second);
                     for(const auto& pair : branch)
                     {
-                        //std::cout<<"B"<<std::endl;
-                        
                         if(!pair.first->source->periodicPlaneEdge.first && !pair.first->source->periodicPlaneEdge.second)
                         {// not a boundary node
                             csNodes.back().first.emplace_back(pair.first->source);
