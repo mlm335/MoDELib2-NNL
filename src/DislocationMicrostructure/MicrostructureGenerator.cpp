@@ -20,6 +20,7 @@
 #include <PeriodicDipoleGenerator.h>
 #include <PrismaticLoopGenerator.h>
 #include <SphericalInclusionsGenerator.h>
+#include <PolyhedronInclusionsGenerator.h>
 #include <StackingFaultTetrahedraGenerator.h>
 #include <FrankLoopsGenerator.h>
 #include <PlanarLoopGenerator.h>
@@ -28,10 +29,10 @@
 namespace model
 {
 
-std::shared_ptr<PeriodicPlanePatch<3>> PolyPoint::periodicPlanePatch() const
-{
-    return nullptr;
-}
+    std::shared_ptr<PeriodicPlanePatch<3>> PolyPoint::periodicPlanePatch() const
+    {
+        return nullptr;
+    }
 
     MicrostructureGenerator::MicrostructureGenerator(DislocationDynamicsBase<3>& ddBase_in) :
     /* init*/ ddBase(ddBase_in)
@@ -101,20 +102,25 @@ std::shared_ptr<PeriodicPlanePatch<3>> PolyPoint::periodicPlanePatch() const
         StackingFaultTetrahedraGenerator gen(spec,*this);
     }
 
-void MicrostructureGenerator::addSphericalInclusionDensity(const SphericalInclusionDensitySpecification& spec)
-{
-    SphericalInclusionsGenerator gen(spec,*this);
-}
+    void MicrostructureGenerator::addSphericalInclusionDensity(const SphericalInclusionDensitySpecification& spec)
+    {
+        SphericalInclusionsGenerator gen(spec,*this);
+    }
 
-void MicrostructureGenerator::addSphericalInclusionIndividual(const SphericalInclusionIndividualSpecification& spec)
-{
-    SphericalInclusionsGenerator gen(spec,*this);
-}
+    void MicrostructureGenerator::addSphericalInclusionIndividual(const SphericalInclusionIndividualSpecification& spec)
+    {
+        SphericalInclusionsGenerator gen(spec,*this);
+    }
 
-void MicrostructureGenerator::addPlanarLoopIndividual(const PlanarLoopIndividualSpecification& spec)
-{
-    PlanarLoopGenerator gen(spec,*this);
-}
+    void MicrostructureGenerator::addPolyhedronInclusionIndividual(const PolyhedronInclusionIndividualSpecification& spec)
+    {
+        PolyhedronInclusionsGenerator gen(spec,*this);
+    }
+
+    void MicrostructureGenerator::addPlanarLoopIndividual(const PlanarLoopIndividualSpecification& spec)
+    {
+        PlanarLoopGenerator gen(spec,*this);
+    }
 
     void MicrostructureGenerator::readMicrostructureFile()
     {
@@ -127,10 +133,7 @@ void MicrostructureGenerator::addPlanarLoopIndividual(const PlanarLoopIndividual
             const std::string microstructureFileName(std::filesystem::path(ddBase.simulationParameters.traitsIO.microstructureFile).parent_path().string()+"/"+TextFileParser::removeSpaces(pair.first));
             const std::string type(TextFileParser::removeSpaces(TextFileParser(microstructureFileName).readString("type",false)));
             const std::string style(TextFileParser::removeSpaces(TextFileParser(microstructureFileName).readString("style",false)));
-            
-            //        const std::string tag(TextFileParser::removeSpaces(TextFileParser(microstructureFileName).readString("tag",false)));
-            //        bool success(false);
-            
+                        
             if(type=="ShearLoop")
             {
                 if(style=="Density" || style=="density")
@@ -215,7 +218,7 @@ void MicrostructureGenerator::addPlanarLoopIndividual(const PlanarLoopIndividual
                 {
                     throw std::runtime_error("Unkown style "+style+" for "+type);
                 }
-//                success=this->emplace(tag,new StackingFaultTetrahedraGenerator(microstructureFileName)).second;
+                //                success=this->emplace(tag,new StackingFaultTetrahedraGenerator(microstructureFileName)).second;
             }
             else if(type=="SphericalInclusions")
             {
@@ -233,21 +236,40 @@ void MicrostructureGenerator::addPlanarLoopIndividual(const PlanarLoopIndividual
                 {
                     throw std::runtime_error("Unkown style "+style+" for "+type);
                 }
-//                success=this->emplace(tag,new SphericalInclusionsGenerator(microstructureFileName)).second;
+                //                success=this->emplace(tag,new SphericalInclusionsGenerator(microstructureFileName)).second;
             }
-                    else if(type=="PlanarLoop")
-                    {
-                        if(style=="Individual" || style=="individual")
-                        {
-                            PlanarLoopIndividualSpecification spec(microstructureFileName);
-                            addPlanarLoopIndividual(spec);
-                        }
-                        else
-                        {
-                            throw std::runtime_error("Unkown style "+style+" for "+type);
-                        }
-//                        success=this->emplace(tag,new PlanarLoopGenerator(microstructureFileName)).second;
-                    }
+            else if(type=="PolyhedronInclusions")
+            {
+                if(style=="Density" || style=="density")
+                {
+                    throw std::runtime_error("Unkown style "+style+" for "+type);
+//                    PolyhedronInclusionDensitySpecification spec(microstructureFileName);
+//                    addPolyhedronInclusionDensity(spec);
+                }
+                else if(style=="Individual" || style=="individual")
+                {
+                    PolyhedronInclusionIndividualSpecification spec(microstructureFileName);
+                    addPolyhedronInclusionIndividual(spec);
+                }
+                else
+                {
+                    throw std::runtime_error("Unkown style "+style+" for "+type);
+                }
+                //                success=this->emplace(tag,new SphericalInclusionsGenerator(microstructureFileName)).second;
+            }
+            else if(type=="PlanarLoop")
+            {
+                if(style=="Individual" || style=="individual")
+                {
+                    PlanarLoopIndividualSpecification spec(microstructureFileName);
+                    addPlanarLoopIndividual(spec);
+                }
+                else
+                {
+                    throw std::runtime_error("Unkown style "+style+" for "+type);
+                }
+                //                        success=this->emplace(tag,new PlanarLoopGenerator(microstructureFileName)).second;
+            }
             //        else if(microstructureType=="PolyhedronInclusions")
             //        {
             //            success=this->emplace(tag,new PolyhedronInclusionsGenerator(microstructureFileName)).second;
@@ -256,14 +278,10 @@ void MicrostructureGenerator::addPlanarLoopIndividual(const PlanarLoopIndividual
             //        {
             //            success=this->emplace(tag,new VTKGenerator(microstructureFileName)).second;
             //        }
-                    else
-                    {
-                        throw std::runtime_error("Unkown microstructure type "+type+".");
-                    }
-            //        if(!success)
-            //        {
-            //            throw std::runtime_error("Duplicate microstructure tag "+tag+".");
-            //        }
+            else
+            {
+                throw std::runtime_error("Unkown microstructure type "+type+".");
+            }
         }
     }
 

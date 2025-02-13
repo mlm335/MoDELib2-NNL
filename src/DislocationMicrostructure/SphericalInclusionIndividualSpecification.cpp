@@ -14,8 +14,8 @@ namespace model
 {
     SphericalInclusionIndividualSpecification::SphericalInclusionIndividualSpecification():
     /* init */ MicrostructureSpecificationBase("SphericalInclusion","Individual") 
-    /* init */,allowOverlap(false)
-    /* init */,allowOutside(false)
+//    /* init */,allowOverlap(false)
+//    /* init */,allowOutside(false)
     {
         
     }
@@ -23,8 +23,8 @@ namespace model
     SphericalInclusionIndividualSpecification::SphericalInclusionIndividualSpecification(const std::string& fileName):
     /* init */ MicrostructureSpecificationBase("SphericalInclusion","Individual",fileName)
     /* init */,radii_SI(this->parser->readArray<double>("radii_SI",true))
-    /* init */,centers(radii_SI.size()? this->parser->readMatrix<double>("centers",radii_SI.size(),dim,true) : Eigen::Matrix<double,Eigen::Dynamic,dim>::Zero(0,dim))
-    /* init */,eigenDistortions(radii_SI.size()? this->parser->readMatrix<double>("eigenDistortions",radii_SI.size(),dim*dim,true) : Eigen::Matrix<double,Eigen::Dynamic,dim>::Zero(0,dim))
+    /* init */,centers(radii_SI.size()? this->parser->readMatrix<double>("centers",radii_SI.size(),3,true) : Eigen::Matrix<double,Eigen::Dynamic,3>::Zero(0,3))
+    /* init */,eigenDistortions(radii_SI.size()? this->parser->readMatrix<double>("eigenDistortions",radii_SI.size(),3*3,true) : Eigen::Matrix<double,Eigen::Dynamic,3>::Zero(0,3))
     /* init */,velocityReductionFactors(radii_SI.size()? this->parser->readArray<double>("velocityReductionFactors",true) : std::vector<double>())
     /* init */,phaseIDs(radii_SI.size()? this->parser->readArray<int>("phaseIDs",true) : std::vector<int>())
     /* init */,allowOverlap(radii_SI.size()? this->parser->readScalar<int>("allowOverlap",true) : false)
@@ -33,8 +33,8 @@ namespace model
         if(radii_SI.size())
         {
 //            const std::vector<int> periodicDipoleExitFaceIDs(this->parser->readArray<int>("periodicDipoleExitFaceIDs",true));
-//            const Eigen::Matrix<double,Eigen::Dynamic,dim> centers(this->parser->readMatrix<double>("centers",radii_SI.size(),dim,true));
-//            const Eigen::Matrix<double,Eigen::Dynamic,dim*dim> eigenDistortions(this->parser->readMatrix<double>("eigenDistortions",radii_SI.size(),dim*dim,true));
+//            const Eigen::Matrix<double,Eigen::Dynamic,3> centers(this->parser->readMatrix<double>("centers",radii_SI.size(),3,true));
+//            const Eigen::Matrix<double,Eigen::Dynamic,3*3> eigenDistortions(this->parser->readMatrix<double>("eigenDistortions",radii_SI.size(),3*3,true));
 //            const std::vector<double> velocityReductionFactors(this->parser->readArray<double>("inclusionVelocityReductionFactors",true));
 //            const std::vector<int> phaseIDs(this->parser->readArray<int>("phaseIDs",true));
 

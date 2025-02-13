@@ -45,6 +45,7 @@ namespace model
     /* init */ R1(mSize>1 ? getR1() : Eigen::Matrix<double,mSize,mSize>::Zero()),
     /* init */ R1cd(iSize>0 ? msVector.abs().matrix().asDiagonal()*R1*(1.0/msVector.abs()).matrix().asDiagonal() : Eigen::Matrix<double,mSize,mSize>::Zero().eval()),
     /* init */ R2(mSize>1 ? getR2() : std::vector<Eigen::Matrix<double,mSize,mSize>>(2,Eigen::Matrix<double,mSize,mSize>::Zero())),
+    /* init */ discreteDislocationBias(ddBase.simulationParameters.useClusterDynamics? TextFileParser(ddBase.poly.materialFile).readMatrix<double,2,mSize>("discreteDislocationBias",true).eval() : Eigen::Array<double,2,mSize>::Zero()),
     /* IMMOBILE SPECIES */
     /* init */ immobileSpeciesVector((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<int>("immobileSpeciesVector",1,iSize/2,true).array().template cast<double>() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
     /* init */ immobileSpeciesRelRelaxVol((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("immobileSpeciesRelRelaxVol",true).array() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
@@ -61,11 +62,11 @@ namespace model
     /* init */ nmax((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("nmax",true) : Eigen::Array<double,1,iSize/2>::Zero()),
     /* init */ r_min((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("r_min",true).array() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
     /* init */ computeReactions((ddBase.simulationParameters.useClusterDynamics && mSize>0 && mSize+iSize>1)? TextFileParser(ddBase.poly.materialFile).readScalar<int>("computeReactions",true) : 0),
-    /* init */ use0DsinkStrength((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<int>("use0DsinkStrength",true) : 0),
-    /* init */ Zv((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,dim>("Zv",true) : Eigen::Array<double,1,dim>::Zero()),
-    /* init */ Zi((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,dim>("Zi",true) : Eigen::Array<double,1,dim>::Zero()),
-    /* init */ ZVec((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,mSize>("ZVec",true) : Eigen::Array<double,1,mSize>::Zero()),
-    /* init */ rc_il((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,dim>("rc_il",true)/ddBase.poly.b_SI : Eigen::Array<double,1,dim>::Zero().eval()),
+//    /* init */ use0DsinkStrength((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<int>("use0DsinkStrength",true) : 0),
+//    /* init */ Zv((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,dim>("Zv",true) : Eigen::Array<double,1,dim>::Zero()),
+//    /* init */ Zi((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,dim>("Zi",true) : Eigen::Array<double,1,dim>::Zero()),
+//    /* init */ ZVec((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,mSize>("ZVec",true) : Eigen::Array<double,1,mSize>::Zero()),
+//    /* init */ rc_il((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,dim>("rc_il",true)/ddBase.poly.b_SI : Eigen::Array<double,1,dim>::Zero().eval()),
     /* init */ discreteDistanceFactor((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("distanceFactor",true) : 0.0)
     {
         
@@ -252,30 +253,34 @@ namespace model
 
                 if(int(k)==key.first || int(k)==key.second)
                 {// (key.first, key.second) consume k_specie
-                    if(msVector(key.second)>1.0 && use0DsinkStrength)
-                    { // 3D mobile + 1D immobile
-                        tempR2_k(key.first ,key.second) -= pair.second*2.0*M_PI*(rn(key.second))*(aveD(key.first))/omega;
-                        tempR2_k(key.second,key.first)  -= pair.second*2.0*M_PI*(rn(key.second))*(aveD(key.first))/omega;
-                    }
-                    else
-                    { // 3D mobile + 3D mobile
-                        tempR2_k(key.first ,key.second) -= pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
-                        tempR2_k(key.second ,key.first) -= pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
-                    }
+//                    if(msVector(key.second)>1.0 && use0DsinkStrength)
+//                    { // 3D mobile + 1D immobile
+//                        tempR2_k(key.first ,key.second) -= pair.second*2.0*M_PI*(rn(key.second))*(aveD(key.first))/omega;
+//                        tempR2_k(key.second,key.first)  -= pair.second*2.0*M_PI*(rn(key.second))*(aveD(key.first))/omega;
+//                    }
+//                    else
+//                    { // 3D mobile + 3D mobile
+//                        tempR2_k(key.first ,key.second) -= pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
+//                        tempR2_k(key.second ,key.first) -= pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
+//                    }
+                    tempR2_k(key.first ,key.second) -= pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
+                    tempR2_k(key.second ,key.first) -= pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
                 }
                 else if( fabs(msVector(key.first)+msVector(key.second)-msVector(k))<FLT_EPSILON )
                 {// (key.first, key.second) generate k_specie
                     const double same= (key.first==key.second) ? 0.5 : 1.0;
-                    if(msVector(key.second)>1.0 && use0DsinkStrength)
-                    { // 3D mobile + 1D immobile
-                        tempR2_k(key.first ,key.second) += same*pair.second*2.0*M_PI*(rn(key.second))*(aveD(key.first))/omega;
-                        tempR2_k(key.second ,key.first) += same*pair.second*2.0*M_PI*(rn(key.second))*(aveD(key.first))/omega;
-                    }
-                    else
-                    { // 3D mobile + 3D mobile
-                        tempR2_k(key.first ,key.second) += same*pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
-                        tempR2_k(key.second ,key.first) += same*pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
-                    }
+//                    if(msVector(key.second)>1.0 && use0DsinkStrength)
+//                    { // 3D mobile + 1D immobile
+//                        tempR2_k(key.first ,key.second) += same*pair.second*2.0*M_PI*(rn(key.second))*(aveD(key.first))/omega;
+//                        tempR2_k(key.second ,key.first) += same*pair.second*2.0*M_PI*(rn(key.second))*(aveD(key.first))/omega;
+//                    }
+//                    else
+//                    { // 3D mobile + 3D mobile
+//                        tempR2_k(key.first ,key.second) += same*pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
+//                        tempR2_k(key.second ,key.first) += same*pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
+//                    }
+                    tempR2_k(key.first ,key.second) += same*pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
+                    tempR2_k(key.second ,key.first) += same*pair.second*4.0*M_PI*(rn(key.first)+rn(key.second))*(aveD(key.first)+aveD(key.second))/omega;
                 }
             }
             

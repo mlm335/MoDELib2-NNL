@@ -62,6 +62,40 @@ namespace model
         std::pair<bool,std::pair<int,int>> isCrossSlipLink(const NetworkLinkType& link) override;
     };
 
+//    template <typename DislocationNetworkType>   //For FCC lattice the same is BCC
+//    struct EscaigCrossSlipModelFCC : public BaseCrossSlipModel<DislocationNetworkType>
+//    {
+//        typedef TypeTraits<DislocationNetworkType> TraitsType;
+//        static constexpr int dim=TraitsType::dim;
+//        typedef typename TraitsType::NetworkLinkType NetworkLinkType;
+//        typedef typename TraitsType::NetworkNodeType NetworkNodeType;
+//        typedef std::tuple<std::shared_ptr<NetworkNodeType>,std::shared_ptr<NetworkNodeType>,size_t,size_t> CrossSlipTupleType;
+//        typedef std::deque<CrossSlipTupleType> CrossSlipContainerType;
+//
+//        std::random_device rd;
+//        std::mt19937 gen;
+//        std::uniform_real_distribution<> dist;
+//        // const bool enableBasalSlipSystems;
+//        const double kB_DD;
+//        const double lengthC;
+//        const double activeVol;
+//        const double Tcs;
+//        const double omegaA;
+//        const double Ea;
+//        const double Tau_3;
+//
+//       
+//        EscaigCrossSlipModelFCC(const PolycrystallineMaterialBase& material,const DDtraitsIO& traitsIO);
+//        double crossSlipRateKernel(const int& k,const NetworkLinkType& link,const SlipSystem& css,
+//                                   const double& w,
+//                                   const double& L,
+//                                   const double& dE,
+//                                   const double& Veff
+//                                   ) const;
+//        void addToCrossSlip(const NetworkLinkType& link,CrossSlipContainerType& crossSlipDeq) override;
+//        std::pair<bool,std::pair<int,int>> isCrossSlipLink(const NetworkLinkType& link) override;
+//    };
+
     template <typename DislocationNetworkType>
     struct EscaigCrossSlipModelHEX : public BaseCrossSlipModel<DislocationNetworkType>
     {

@@ -704,6 +704,20 @@ typename DislocationSegment<dim, corder>::VectorDim DislocationSegment<dim, cord
             Eigen::Array<double,mSize,1> c(Eigen::Array<double,mSize,1>::Zero());
             const double bxtSource(bCt.dot(this->source->climbDirection()));
             const double bxtSink  (bCt.dot(this->sink->climbDirection()));
+            
+            Eigen::Array<double,mSize,1> bias(Eigen::Array<double,mSize,1>::Ones());
+            if(this->loopLinks().size()==1)
+            {
+                const auto loop((*this->loopLinks().begin())->loop);
+                if(loop->burgers().dot(loop->rightHandedUnitNormal())>FLT_EPSILON)
+                {// vacancy loop
+                    bias=icp.discreteDislocationBias.row(0);
+                }
+                else if(loop->burgers().dot(loop->rightHandedUnitNormal())<-FLT_EPSILON)
+                {
+                    bias=icp.discreteDislocationBias.row(1);
+                }
+            }
 
             for(const auto& shift : this->network().ddBase.periodicShifts)
             {
@@ -720,8 +734,8 @@ typename DislocationSegment<dim, corder>::VectorDim DislocationSegment<dim, cord
                 const Eigen::Array<double,mSize,1> logTerm(log((2.0*sqbca+2.0+ba)/(2.0*sqca+ba)));
                 const Eigen::Array<double,mSize,1> I0((1.0+0.5*ba)*logTerm-sqbca+sqca);
                 const Eigen::Array<double,mSize,1> I1(     -0.5*ba*logTerm+sqbca-sqca);
-                M.col(0)+=bxtSource*this->chordLength()/(4.0*M_PI)*(I0/sqrt(a*Ddet)).matrix();
-                M.col(1)+=bxtSink*  this->chordLength()/(4.0*M_PI)*(I1/sqrt(a*Ddet)).matrix();
+                M.col(0)+=bxtSource*this->chordLength()/(4.0*M_PI)*(I0/bias/sqrt(a*Ddet)).matrix();
+                M.col(1)+=bxtSink*  this->chordLength()/(4.0*M_PI)*(I1/bias/sqrt(a*Ddet)).matrix();
             }
         }
         return M;

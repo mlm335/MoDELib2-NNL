@@ -59,6 +59,7 @@
 #include <StackingFaultTetrahedraIndividualSpecification.h>
 #include <SphericalInclusionDensitySpecification.h>
 #include <SphericalInclusionIndividualSpecification.h>
+#include <PolyhedronInclusionIndividualSpecification.h>
 #include <PlanarLoopIndividualSpecification.h>
 
 namespace model
@@ -110,6 +111,7 @@ struct PolyPoint
         void addStackingFaultTetrahedraIndividual(const StackingFaultTetrahedraIndividualSpecification& spec);
         void addSphericalInclusionDensity(const SphericalInclusionDensitySpecification& spec);
         void addSphericalInclusionIndividual(const SphericalInclusionIndividualSpecification& spec);
+        void addPolyhedronInclusionIndividual(const PolyhedronInclusionIndividualSpecification& spec);
         void addPlanarLoopIndividual(const PlanarLoopIndividualSpecification& spec);
 
         size_t insertLoop(const VectorDimD& b,const VectorDimD& unitNormal,const VectorDimD& P0,const size_t& grainID,const DislocationLoopType& loopType);

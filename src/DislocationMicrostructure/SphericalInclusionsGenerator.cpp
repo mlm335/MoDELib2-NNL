@@ -139,7 +139,7 @@ SphericalInclusionsGenerator::SphericalInclusionsGenerator(const SphericalInclus
 //        {
 //            throw std::runtime_error("inclusionRadii_SI.size()="+std::to_string(inclusionRadii_SI.size())+" NOT EQUAL TO phaseIDs.size()="+std::to_string(phaseIDs.size()));
 //        }
-        
+
         for(size_t k=0;k<spec.radii_SI.size();++k)
         {
             if(generateSingle(mg,spec.centers.row(k),spec.radii_SI[k]/mg.ddBase.poly.b_SI,spec.eigenDistortions.row(k),spec.velocityReductionFactors[k],spec.phaseIDs[k],spec.allowOutside,spec.allowOverlap))

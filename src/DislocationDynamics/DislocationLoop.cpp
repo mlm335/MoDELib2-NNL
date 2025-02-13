@@ -31,6 +31,7 @@ namespace model
     /* init */,_slippedArea(0.0)
     /* init */,_slippedAreaRate(0.0)
     /* init */,_rightHandedUnitNormal(VectorDim::Zero())
+    /* init */,_rightHandedUnitNormal_old(VectorDim::Zero())
     /* init */,_rightHandedNormal(*grain.singleCrystal)
     /* init */,_slipSystem(nullptr)
 
@@ -174,6 +175,12 @@ namespace model
     const typename DislocationLoop<dim,corder>::VectorDim& DislocationLoop<dim,corder>::rightHandedUnitNormal() const
     {
         return _rightHandedUnitNormal;
+    }
+
+    template <int dim, short unsigned int corder>
+    const typename DislocationLoop<dim,corder>::VectorDim& DislocationLoop<dim,corder>::rightHandedUnitNormalOld() const
+    {
+        return _rightHandedUnitNormal_old;
     }
 
     template <int dim, short unsigned int corder>
@@ -410,6 +417,7 @@ namespace model
     void DislocationLoop<dim,corder>::updateGeometry()
     {
         VerboseDislocationLoop(2,"DislocationLoop "<<this->sID<<" updateGeometry"<<std::endl;);
+        _rightHandedUnitNormal_old=_rightHandedUnitNormal;
         nA.setZero();
         //    nAR.setZero();
         if(glidePlane)

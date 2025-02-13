@@ -63,6 +63,8 @@ struct ClusterDynamicsParameters
     // Second-order reaction
     const std::vector<Eigen::Matrix<double,mSize,mSize>> R2;
 
+    // Bias factors
+    const Eigen::Array<double,2,mSize> discreteDislocationBias;
 
     // Immobile Species
     const Eigen::Array<double,1,iSize/2> immobileSpeciesVector;
@@ -84,13 +86,13 @@ struct ClusterDynamicsParameters
 
     // Reaction map (types: parameters)
     const bool computeReactions;
-    const int use0DsinkStrength;
-
-    // Bias factors
-    const Eigen::Array<double,1,dim> Zv;
-    const Eigen::Array<double,1,dim> Zi;
-    const Eigen::Array<double,1,mSize> ZVec;
-    const Eigen::Array<double,1,dim> rc_il;
+//    const int use0DsinkStrength;
+//
+//    // Bias factors
+//    const Eigen::Array<double,1,dim> Zv;
+//    const Eigen::Array<double,1,dim> Zi;
+//    const Eigen::Array<double,1,mSize> ZVec;
+//    const Eigen::Array<double,1,dim> rc_il;
 
 
     // Discrete Loop Generation

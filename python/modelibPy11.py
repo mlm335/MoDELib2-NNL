@@ -1,11 +1,12 @@
 # /opt/local/bin/python3.12 modelibPy11.py
 import sys
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 sys.path.append("../build/tools/pyMoDELib")
 import pyMoDELib
 
-simulationDir="../tutorials/climb/"
+simulationDir=os.path.abspath("../tutorials/crossSlip")
 ddBase=pyMoDELib.DislocationDynamicsBase(simulationDir)
 
 # Microstructure Generation
@@ -57,7 +58,7 @@ spec.radiusDistributionMean=1.0e-07
 spec.radiusDistributionStd=0.0e-8
 spec.numberOfSides=20
 spec.areVacancyLoops=1
-#microstructureGenerator.addFrankLoopsDensity(spec)
+microstructureGenerator.addFrankLoopsDensity(spec)
 
 spec=pyMoDELib.FrankLoopsIndividualSpecification()
 spec.planeIDs=[0,-1]
@@ -81,6 +82,7 @@ spec.basePoints=np.array([[0.0,0.0,0.0],[100.0,0.0,0.0]])
 #microstructureGenerator.addStackingFaultTetrahedraIndividual(spec)
 
 spec=pyMoDELib.SphericalInclusionDensitySpecification()
+spec.targetDensity=1e20;
 spec.diameterLognormalDistribution_M=3.11e-8; #[m] of log-normal diameter M
 spec.diameterLognormalDistribution_S=0.38; #[-] of log-normal distribution parameter S
 spec.diameterLognormalDistribution_A=1.05e-8; #[m] log-normal distribution parameter A
@@ -92,8 +94,26 @@ spec.velocityReductionFactor=1.0;
 spec.phaseID=0;
 microstructureGenerator.addSphericalInclusionDensity(spec)
 
+spec=pyMoDELib.SphericalInclusionIndividualSpecification()
+spec.radii_SI=[27.0e-9,27.0e-9]
+spec.centers=np.array([[200.0,0.0,0.0],[-200.0,0.0,0.0]])
+spec.eigenDistortions=np.array([[1.0e-3,0.0,0.0,0.0,1.0e-3,0.0,0.0,0.0,1.0e-3],[2.0e-3,0.0,0.0,0.0,2.0e-3,0.0,0.0,0.0,2.0e-3]])
+spec.velocityReductionFactors=[1.0,1.0]
+spec.phaseIDs=[0,0]
+spec.allowOverlap=0
+spec.allowOutside=0
+#microstructureGenerator.addSphericalInclusionIndividual(spec)
 
-microstructureGenerator.writeConfigFiles(0) # write evel_0.txt (optional)
+spec=pyMoDELib.PolyhedronInclusionIndividualSpecification()
+spec.mshFile="../Library/Meshes/unitCube8_2D.msh"
+spec.X0=np.array([[300.0,100.0,0.0],[-200.0,0.0,0.0]])
+spec.F=np.array([[200.0,0.0,0.0],[0.0,200.0,0.0],[0.0,0.0,200.0]])
+spec.eigenDistortion=np.array([[1.0e-3,0.0,0.0,0.0,1.0e-3,0.0,0.0,0.0,1.0e-3]])
+spec.velocityReductionFactor=1.0
+spec.phaseID=0
+microstructureGenerator.addPolyhedronInclusionIndividual(spec)
+
+microstructureGenerator.writeConfigFiles(1) # write evel_0.txt (optional)
 
 # DefectiveCrystal
 defectiveCrystal=pyMoDELib.DefectiveCrystal(ddBase)
@@ -112,10 +132,10 @@ print(len(DN.loopNodes()))
 meshSize=100
 for loopID in DN.loops():
     loop=DN.loops().getRef(loopID)
-    meshedLoopVector=loop.meshed(meshSize)
-    for meshedLoop in meshedLoopVector:
-        disp=meshedLoop.plasticDisplacement(points)
-        print(disp)
+#    meshedLoopVector=loop.meshed(meshSize)
+#    for meshedLoop in meshedLoopVector:
+#        disp=meshedLoop.plasticDisplacement(points)
+#        print(disp)
 #
 #rp=ddBase.poly.grain(1)
 

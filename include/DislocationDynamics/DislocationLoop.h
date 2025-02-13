@@ -56,6 +56,7 @@ namespace model
         double _slippedArea;
         double _slippedAreaRate;
         VectorDim _rightHandedUnitNormal;
+        VectorDim _rightHandedUnitNormal_old;
         ReciprocalLatticeDirectionType _rightHandedNormal;
         std::shared_ptr<SlipSystem> _slipSystem;
 
@@ -69,6 +70,7 @@ namespace model
         const double& slippedArea() const;
         const double& slippedAreaRate() const;
         const VectorDim& rightHandedUnitNormal() const;
+        const VectorDim& rightHandedUnitNormalOld() const;
         const ReciprocalLatticeDirectionType& rightHandedNormal() const;
         std::tuple<double,double,double,double> loopLength() const;
         std::shared_ptr<SlipSystem> searchSlipSystem() const;

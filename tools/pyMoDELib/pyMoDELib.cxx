@@ -60,10 +60,27 @@ PYBIND11_MODULE(pyMoDELib,m)
 {
     namespace py=pybind11;
 
+    py::class_<DDtraitsIO>(m,"DDtraitsIO")
+        .def(py::init<const std::string&>())
+        .def_readonly("simulationFolder", &DDtraitsIO::simulationFolder)
+        .def_readonly("inputFilesFolder", &DDtraitsIO::inputFilesFolder)
+        .def_readonly("evlFolder", &DDtraitsIO::evlFolder)
+        .def_readonly("auxFolder", &DDtraitsIO::auxFolder)
+        .def_readonly("fFolder", &DDtraitsIO::fFolder)
+        .def_readonly("ddFile", &DDtraitsIO::ddFile)
+        .def_readonly("fFile", &DDtraitsIO::fFile)
+        .def_readonly("flabFile", &DDtraitsIO::flabFile)
+        .def_readonly("polyFile", &DDtraitsIO::polyFile)
+        .def_readonly("materialFile", &DDtraitsIO::materialFile)
+        .def_readonly("microstructureFile", &DDtraitsIO::microstructureFile)
+        .def_readonly("meshFile", &DDtraitsIO::meshFile)
+    ;
+    
     py::class_<DefectiveCrystalParameters>(m,"DefectiveCrystalParameters")
         .def(py::init<const std::string&>())
         .def_readwrite("runID", &DefectiveCrystalParameters::runID)
         .def_readonly("useFEM", &DefectiveCrystalParameters::useFEM)
+        .def_readonly("traitsIO", &DefectiveCrystalParameters::traitsIO)
     ;
     
     py::class_<MeshRegionObserver<MeshRegion<3>>>(m,"MeshRegionObserver")
@@ -117,9 +134,8 @@ PYBIND11_MODULE(pyMoDELib,m)
     
     py::class_<DislocationDynamicsBase<3>>(m,"DislocationDynamicsBase")
         .def(py::init<const std::string&>())
-//        .def("getMesh", &DislocationDynamicsBase<3>::getMesh)
         .def_readonly("poly", &DislocationDynamicsBase<3>::poly)
-//        .def_readonly("mesh", &DislocationDynamicsBase<3>::mesh)
+        .def_readonly("simulationParameters", &DislocationDynamicsBase<3>::simulationParameters)
     ;
     
     py::class_<MicrostructureBase<3>>(m,"MicrostructureBase")
@@ -230,6 +246,7 @@ PYBIND11_MODULE(pyMoDELib,m)
         .def("addStackingFaultTetrahedraIndividual", &MicrostructureGenerator::addStackingFaultTetrahedraIndividual)
         .def("addSphericalInclusionDensity", &MicrostructureGenerator::addSphericalInclusionDensity)
         .def("addSphericalInclusionIndividual", &MicrostructureGenerator::addSphericalInclusionIndividual)
+        .def("addPolyhedronInclusionIndividual", &MicrostructureGenerator::addPolyhedronInclusionIndividual)
         .def("writeConfigFiles", &MicrostructureGenerator::writeConfigFiles)
     ;
         
@@ -381,6 +398,7 @@ PYBIND11_MODULE(pyMoDELib,m)
     /*      */>(m,"SphericalInclusionDensitySpecification")
         .def(py::init<>())
         .def(py::init<const std::string&>())
+        .def_readwrite("targetDensity", &SphericalInclusionDensitySpecification::targetDensity)
         .def_readwrite("diameterLognormalDistribution_M", &SphericalInclusionDensitySpecification::diameterLognormalDistribution_M)
         .def_readwrite("diameterLognormalDistribution_S", &SphericalInclusionDensitySpecification::diameterLognormalDistribution_S)
         .def_readwrite("diameterLognormalDistribution_A", &SphericalInclusionDensitySpecification::diameterLognormalDistribution_A)
@@ -408,6 +426,76 @@ PYBIND11_MODULE(pyMoDELib,m)
         .def_readwrite("allowOutside", &SphericalInclusionDensitySpecification::allowOutside)
         .def_readwrite("velocityReductionFactor", &SphericalInclusionDensitySpecification::velocityReductionFactor)
         .def_readwrite("phaseID", &SphericalInclusionDensitySpecification::phaseID)
+    ;
+    
+    py::class_<SphericalInclusionIndividualSpecification
+    /*      */>(m,"SphericalInclusionIndividualSpecification")
+        .def(py::init<>())
+        .def(py::init<const std::string&>())
+        .def_readwrite("radii_SI", &SphericalInclusionIndividualSpecification::radii_SI)
+        .def_property( "centers",
+                    [](const SphericalInclusionIndividualSpecification& self )
+                    {// Getter
+                        return self.centers;
+                    },
+                    []( SphericalInclusionIndividualSpecification& self, const Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,3>>& val )
+                    {// Setter
+                        self.centers = val;
+                    }
+                )
+        .def_property( "eigenDistortions",
+                    [](const SphericalInclusionIndividualSpecification& self )
+                    {// Getter
+                        return self.eigenDistortions;
+                    },
+                    []( SphericalInclusionIndividualSpecification& self, const Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,3*3>>& val )
+                    {// Setter
+                        self.eigenDistortions = val;
+                    }
+                )
+        .def_readwrite("velocityReductionFactors", &SphericalInclusionIndividualSpecification::velocityReductionFactors)
+        .def_readwrite("phaseIDs", &SphericalInclusionIndividualSpecification::phaseIDs)
+        .def_readwrite("allowOverlap", &SphericalInclusionIndividualSpecification::allowOverlap)
+        .def_readwrite("allowOutside", &SphericalInclusionIndividualSpecification::allowOutside)
+    ;
+    
+    py::class_<PolyhedronInclusionIndividualSpecification
+    /*      */>(m,"PolyhedronInclusionIndividualSpecification")
+        .def(py::init<>())
+        .def(py::init<const std::string&>())
+        .def_readwrite("mshFile", &PolyhedronInclusionIndividualSpecification::mshFile)
+        .def_property( "X0",
+                    [](const PolyhedronInclusionIndividualSpecification& self )
+                    {// Getter
+                        return self.X0;
+                    },
+                    []( PolyhedronInclusionIndividualSpecification& self, const Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,3>>& val )
+                    {// Setter
+                        self.X0 = val;
+                    }
+                )
+        .def_property( "F",
+                    [](const PolyhedronInclusionIndividualSpecification& self )
+                    {// Getter
+                        return self.F;
+                    },
+                    []( PolyhedronInclusionIndividualSpecification& self, const Eigen::Ref<const Eigen::Matrix<double,3,3>>& val )
+                    {// Setter
+                        self.F = val;
+                    }
+                )
+        .def_property( "eigenDistortion",
+                    [](const PolyhedronInclusionIndividualSpecification& self )
+                    {// Getter
+                        return self.eigenDistortion;
+                    },
+                    []( PolyhedronInclusionIndividualSpecification& self, const Eigen::Ref<const Eigen::Matrix<double,1,3*3>>& val )
+                    {// Setter
+                        self.eigenDistortion = val;
+                    }
+                )
+        .def_readwrite("velocityReductionFactor", &PolyhedronInclusionIndividualSpecification::velocityReductionFactor)
+        .def_readwrite("phaseID", &PolyhedronInclusionIndividualSpecification::phaseID)
     ;
     
 }

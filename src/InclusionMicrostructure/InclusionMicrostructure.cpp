@@ -25,6 +25,7 @@ namespace model
         this->lastUpdateTime=this->ddBase.simulationParameters.totalTime;
         
         this->eshelbyInclusions().clear();
+        this->polyhedronInclusionNodes().clear();
         for(const auto& inclusion : configIO.sphericalInclusions())
         {
             //        std::cout<<"Creating spherical inclusion "<<inclusion.inclusionID<<std::endl;

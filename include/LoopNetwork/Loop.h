@@ -331,19 +331,17 @@ namespace model
         }
 
 //        /**********************************************************************/
-//        bool isIsolated() const
-//        {
-//            bool temp(true);
-//            for(const auto& link : links())
-//            {
-//                temp*=(link.second->pLink->loopLinks().size()==1);
-//                if(!temp)
-//                {
-//                    break;
-//                }
-//            }
-//            return temp;
-//        }
+        bool isIsolated() const
+        {
+            for(const auto& link : loopLinks())
+            {
+                if(link->networkLink()->loopLinks().size()!=1)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         
         /**********************************************************************/
         std::string tag() const

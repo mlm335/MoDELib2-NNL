@@ -35,35 +35,32 @@
 #include <TextFileParser.h>
 #include <DislocationInjector.h>
 #include <MeshBoundarySegment.h>
-//#include <ConfinedDislocationObject.h>
 #include <GlidePlaneModule.h>
 #include <MeshModule.h>
 #include <Plane.h>
-#include <MicrostructureGeneratorBase.h>
+//#include <PolyhedronInclusionDensitySpecification.h>
+#include <PolyhedronInclusionIndividualSpecification.h>
 
 
 namespace model
 {
 
-class PolyhedronInclusionsGenerator : public MicrostructureGeneratorBase
-{
-    
-    bool generateSingle(MicrostructureGenerator& mg,const std::map<size_t,Eigen::Vector3d>& polyNodes,const std::map<size_t,std::vector<size_t>>& faceMap, const Eigen::Matrix<double,1,dim*dim>& eTrow, const double& vrc,const int&type);
-    
+    class PolyhedronInclusionsGenerator
+    {
+        
+        static constexpr int dim=3;
 
-    
-public:
-    
-    const bool allowOverlap;
-    
-    PolyhedronInclusionsGenerator(const std::string& fileName);
-    
-//    void generate(MicrostructureGenerator& mg) override;
-    void generateIndividual(MicrostructureGenerator& mg) override;
-    void generateDensity(MicrostructureGenerator& mg) override;
-    
-    
-};
+        
+        bool generateSingle(MicrostructureGenerator& mg,const std::map<size_t,Eigen::Vector3d>& polyNodes,const std::map<size_t,std::vector<size_t>>& faceMap, const Eigen::Matrix<double,1,dim*dim>& eTrow, const double& vrc,const int&type);
+        
+    public:
+        
+        const bool allowOverlap;
+        
+//        PolyhedronInclusionsGenerator(const PolyhedronInclusionDensitySpecification& spec,MicrostructureGenerator& mg);
+        PolyhedronInclusionsGenerator(const PolyhedronInclusionIndividualSpecification& spec,MicrostructureGenerator& mg);
+        
+    };
 
 }
 #endif

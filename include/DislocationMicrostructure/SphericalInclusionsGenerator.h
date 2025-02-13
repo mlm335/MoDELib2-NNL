@@ -35,7 +35,6 @@
 #include <TextFileParser.h>
 #include <DislocationInjector.h>
 #include <MeshBoundarySegment.h>
-//#include <ConfinedDislocationObject.h>
 #include <GlidePlaneModule.h>
 #include <MeshModule.h>
 #include <Plane.h>
@@ -46,37 +45,20 @@
 namespace model
 {
 
-class SphericalInclusionsGenerator 
-//: public MicrostructureGeneratorBase
-{
-    
-    static constexpr int dim=3;
-    typedef Eigen::Matrix<double,dim,1> VectorDimD;
+    class SphericalInclusionsGenerator
+    {
+        
+        static constexpr int dim=3;
+        typedef Eigen::Matrix<double,dim,1> VectorDimD;
 
-    
-    bool generateSingle(MicrostructureGenerator& mg,const VectorDimD& C,const double& R, const Eigen::Matrix<double,1,dim*dim>& eT, const double& vrc,const int&type, const bool& allowOutside,const bool& allowOverlap);
-    
+        bool generateSingle(MicrostructureGenerator& mg,const VectorDimD& C,const double& R, const Eigen::Matrix<double,1,dim*dim>& eT, const double& vrc,const int&type, const bool& allowOutside,const bool& allowOverlap);
+            
+    public:
 
-    
-public:
-    
-
-//    const bool allowOverlap;
-//    const bool allowOutside;
-
-  
-    SphericalInclusionsGenerator(const SphericalInclusionDensitySpecification& spec,MicrostructureGenerator& mg);
-    SphericalInclusionsGenerator(const SphericalInclusionIndividualSpecification& spec,MicrostructureGenerator& mg);
-
-    
-//    SphericalInclusionsGenerator(const std::string& fileName);
-    
-//    void generate(MicrostructureGenerator& mg) override;
-//    void generateIndividual(MicrostructureGenerator& mg) override;
-//    void generateDensity(MicrostructureGenerator& mg) override;
-    
-    
-};
+        SphericalInclusionsGenerator(const SphericalInclusionDensitySpecification& spec,MicrostructureGenerator& mg);
+        SphericalInclusionsGenerator(const SphericalInclusionIndividualSpecification& spec,MicrostructureGenerator& mg);
+        
+    };
 
 }
 #endif

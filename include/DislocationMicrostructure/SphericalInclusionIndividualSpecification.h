@@ -20,11 +20,11 @@ namespace model
     struct SphericalInclusionIndividualSpecification : public MicrostructureSpecificationBase
     {
         
-        static constexpr int dim=3;
+//        static constexpr int dim=3;
 
         std::vector<double> radii_SI;
-        Eigen::Matrix<double,Eigen::Dynamic,dim> centers;
-        Eigen::Matrix<double,Eigen::Dynamic,dim*dim> eigenDistortions;
+        Eigen::Matrix<double,Eigen::Dynamic,3> centers;
+        Eigen::Matrix<double,Eigen::Dynamic,3*3> eigenDistortions;
         std::vector<double> velocityReductionFactors;
         std::vector<int> phaseIDs;
         bool allowOverlap;

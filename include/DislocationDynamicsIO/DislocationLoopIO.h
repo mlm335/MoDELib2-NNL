@@ -30,11 +30,9 @@ namespace model
          VectorDim P;          // position
          size_t grainID;          // component ID
          int loopType;
-//         long int periodicLoopID;          // sID
-//            VectorDim periodicShift;
          std::tuple<double,double,double,double> loopLength;
+         double slippedArea;
         
-        /**********************************************************************/
         template<typename DislocationLoopType>
         DislocationLoopIO(const DislocationLoopType& dL) :
         /* init */ sID(dL.sID)
@@ -43,22 +41,18 @@ namespace model
         /* init */,P(dL.glidePlane? dL.glidePlane->P : (*dL.loopLinks().begin())->source->get_P() )
         /* init */,grainID(dL.grain.grainID)
         /* init */,loopType(dL.loopType)
-//        /* init */,periodicLoopID(dL.periodicLoop? dL.periodicLoop->sID : -1)
-//        /* init */,periodicShift(dL.periodicShift)
         /* init */,loopLength(dL.network().outputLoopLength? dL.loopLength() : std::make_tuple(0.0,0.0,0.0,0.0))
+        /* init */,slippedArea(0.0)
         {
             
         }
         
-        /**********************************************************************/
         DislocationLoopIO(const size_t& sID_in,         // sID
                           const VectorDim& B_in,          // position
                           const VectorDim& N_in,          // velocity
                           const VectorDim& P_in,          // velocity
                           const size_t& grainID_in,
                           const int& loopType_in
-//                          const long int& periodicLoopID_in,
-//                          const VectorDim& periodicShift_in
                           ) :
         /* init */ sID(sID_in)
         /* init */,B(B_in)
@@ -66,14 +60,12 @@ namespace model
         /* init */,P(P_in)
         /* init */,grainID(grainID_in)
         /* init */,loopType(loopType_in)
-//        /* init */,periodicLoopID(periodicLoopID_in)
-//        /* init */,periodicShift(periodicShift_in)
         /* init */,loopLength(std::make_tuple(0.0,0.0,0.0,0.0))
+        /* init */,slippedArea(0.0)
         {
             
         }
         
-        /**********************************************************************/
         DislocationLoopIO() :
         /* init */ sID(0)
         /* init */,B(VectorDim::Zero())
@@ -81,14 +73,12 @@ namespace model
         /* init */,P(VectorDim::Zero())
         /* init */,grainID(0)
         /* init */,loopType(0)
-//        /* init */,periodicLoopID(-1)
-//        /* init */,periodicShift(VectorDim::Zero())
         /* init */,loopLength(std::make_tuple(0.0,0.0,0.0,0.0))
+        /* init */,slippedArea(0.0)
         {
             
         }
         
-        /**********************************************************************/
         DislocationLoopIO(std::stringstream& ss) :
         /* init */ sID(0)
         /* init */,B(VectorDim::Zero())
@@ -96,9 +86,8 @@ namespace model
         /* init */,P(VectorDim::Zero())
         /* init */,grainID(0)
         /* init */,loopType(0)
-//        /* init */,periodicLoopID(-1)
-//        /* init */,periodicShift(VectorDim::Zero())
         /* init */,loopLength(std::make_tuple(0.0,0.0,0.0,0.0))
+        /* init */,slippedArea(0.0)
         {
             ss>>sID;
             for(int d=0;d<dim;++d)
@@ -115,17 +104,12 @@ namespace model
             }
             ss>>grainID;
             ss>>loopType;
-//            ss>>periodicLoopID;
-//            for(int d=0;d<dim;++d)
-//            {
-//                ss>>periodicShift(d);
-//            }
             double l1,l2,l3,A;
             ss>>l1>>l2>>l3>>A;
             loopLength=std::make_tuple(l1,l2,l3,A);
+            ss>>slippedArea;
         }
         
-        /**********************************************************************/
         template <class T>
         friend T& operator << (T& os, const DislocationLoopIO<dim>& ds)
         {
@@ -135,9 +119,8 @@ namespace model
             /**/<< std::setprecision(15)<<std::scientific<<ds.P.transpose()<<"\t"
             /**/<< ds.grainID<<"\t"
             /**/<< ds.loopType<<"\t"
-//            /**/<< ds.periodicLoopID<<"\t"
-//            /**/<< ds.periodicShift.transpose()<<"\t"
-            /**/<< std::get<0>(ds.loopLength)<<"\t"<< std::get<1>(ds.loopLength)<<"\t"<< std::get<2>(ds.loopLength)<<"\t"<< std::get<3>(ds.loopLength);
+            /**/<< std::get<0>(ds.loopLength)<<"\t"<< std::get<1>(ds.loopLength)<<"\t"<< std::get<2>(ds.loopLength)<<"\t"<< std::get<3>(ds.loopLength)<<"\t"
+            /**/<< ds.slippedArea;
             return os;
         }
         

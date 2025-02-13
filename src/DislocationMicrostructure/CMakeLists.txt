@@ -1,5 +1,4 @@
 target_sources(${PROJECT_NAME} PRIVATE 
-#	${CMAKE_CURRENT_SOURCE_DIR}/MicrostructureGeneratorBase.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MicrostructureSpecificationBase.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MicrostructureGenerator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ShearLoopGenerator.cpp
@@ -22,7 +21,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/SphericalInclusionDensitySpecification.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/SphericalInclusionIndividualSpecification.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/SphericalInclusionsGenerator.cpp
-#	${CMAKE_CURRENT_SOURCE_DIR}/PolyhedronInclusionsGenerator.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/PolyhedronInclusionIndividualSpecification.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/PolyhedronInclusionsGenerator.cpp
 #	${CMAKE_CURRENT_SOURCE_DIR}/VTKGenerator.cpp
 			)
 

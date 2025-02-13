@@ -111,6 +111,99 @@ namespace model
         }
     }
 
+//// Added for FCC
+//template <typename DislocationNetworkType>
+//EscaigCrossSlipModelFCC<DislocationNetworkType>::EscaigCrossSlipModelFCC(const PolycrystallineMaterialBase& material,const DDtraitsIO& traitsIO) :
+///* init */ BaseCrossSlipModel<DislocationNetworkType>(traitsIO)
+///* init */,gen(rd())
+///* init */,dist(0.0,1.0)
+///* init */,kB_DD(TextFileParser(material.materialFile).readScalar<double>("kB_DD",true) ) // /material.b_SI
+///* init */,lengthC(TextFileParser(material.materialFile).readScalar<double>("lengthC",true)) // *material.eV2J/(material.mu_SI*std::pow(material.b_SI,3)) )
+///* init */,activeVol(TextFileParser(material.materialFile).readScalar<double>("activeVol",true)) // Units is b /std::pow(material.b_SI,3) )
+///*init*/,Tcs(TextFileParser(material.materialFile).readScalar<double>("Tcs",true)) // Units in burgers and K
+///*init*/,omegaA(TextFileParser(material.materialFile).readScalar<double>("omegaA",true)) // Units in burgers and K
+///*init*/,Ea(TextFileParser(material.materialFile).readScalar<double>("Ea_SI",true)*material.eV2J/(material.mu_SI*std::pow(material.b_SI,3))) // input units is modelib2
+///*init*/,Tau_3(TextFileParser(material.materialFile).readScalar<double>("Tau_3",true)) // input units is modelib2
+//{
+//    std::cout<<greenBoldColor<<"Creating EscaigCrossSlipModelFCC"<<defaultColor<<std::endl;
+//}
+//
+//// Added for FCC
+//template <typename DislocationNetworkType>
+//double EscaigCrossSlipModelFCC<DislocationNetworkType>::crossSlipRateKernel(const int& k,const NetworkLinkType& link,const SlipSystem& css,
+//                                                                            const double& w,
+//                                                                            const double& L,
+//                                                                            const double& dE,
+//                                                                            const double& Veff
+//                                                                           ) const
+//{ /*!@param[in] k the current quadrature point
+//   *
+//   */
+//    const double eg(link.slipSystem()->unitNormal.transpose()*link.quadraturePoint(k).stress*link.slipSystem()->unitNormal.cross(link.slipSystem()->s.cartesian().normalized()));
+//    const double ss(css.unitNormal.transpose()*link.quadraturePoint(k).stress*css.s.cartesian().normalized());
+//    const double ec(css.unitNormal.transpose()*link.quadraturePoint(k).stress*css.unitNormal.cross(css.s.cartesian().normalized()));
+//    // const double dG(dE-Veff*(-eg + ec)); // deltaSigma
+//    const double dG(dE-std::fabs(ss)*Veff+eg*Veff-ec*Veff);
+//
+//    return w*std::exp(-dG/link.network().poly.kB/link.network().poly.T)*link.quadraturePoint(k).j/L;
+//}
+//
+//// Added for FCC
+//template <typename DislocationNetworkType>
+//std::pair<bool,std::pair<int,int>> EscaigCrossSlipModelFCC<DislocationNetworkType>::isCrossSlipLink(const NetworkLinkType& link)
+//{
+//
+//    const auto isBaseCSLink(this->isBaseCrossSlipLink(link));
+//    if(isBaseCSLink.first)
+//    {
+//        const auto& grain(**link.grains().begin());
+//        std::map<double,int> ssMap;
+//        for(size_t s=0;s<grain.singleCrystal->slipSystems().size();++s)
+//        {
+//            const auto& slipSystem(grain.singleCrystal->slipSystems()[s]);
+//            if(((*link.loopLinks().begin())->loop->slipSystem()->s-slipSystem->s).squaredNorm()==0
+//               && slipSystem->unitNormal.cross(link.glidePlaneNormal()).squaredNorm()>FLT_EPSILON) // not current slip system
+//            {
+//                if(link.slipSystem()->mobility && slipSystem->mobility)
+//                {
+//                    
+//                    double csRate(0.0);
+//                    NetworkLinkType::QuadratureDynamicType::integrate(link.quadraturePoints().size(),this,csRate,&EscaigCrossSlipModelFCC<DislocationNetworkType>::crossSlipRateKernel,link,*slipSystem,
+//                                                                          omegaA,lengthC,Ea,activeVol);
+//                       
+//                    const double csProb(1.0-std::exp(-csRate*link.network().simulationParameters.dt));
+//                    ssMap.emplace(csProb,s);
+//                }
+//            }
+//        }
+//        
+//        if(ssMap.size())
+//        {
+//            const double r(dist(gen));
+//            if(ssMap.rbegin()->first > r)
+//            {
+//                return std::make_pair(true,std::make_pair(grain.grainID,ssMap.rbegin()->second));
+//            }
+//        }
+//    }
+//    return std::make_pair(false,std::make_pair(-1,-1));
+//}
+//
+//
+//template <typename DislocationNetworkType>
+//void EscaigCrossSlipModelFCC<DislocationNetworkType>::addToCrossSlip(const NetworkLinkType& link,
+//                                                                     CrossSlipContainerType& crossSlipDeq)
+//{
+//    const auto isCSLink(isCrossSlipLink(link));
+//    if(isCSLink.first)
+//    {
+//        crossSlipDeq.emplace_back(link.source,
+//                                  link.sink,
+//                                  isCSLink.second.first,
+//                                  isCSLink.second.second);
+//    }
+//}
+
     template <typename DislocationNetworkType>
     EscaigCrossSlipModelHEX<DislocationNetworkType>::EscaigCrossSlipModelHEX(const PolycrystallineMaterialBase& material,const DDtraitsIO& traitsIO) :
     /* init */ BaseCrossSlipModel<DislocationNetworkType>(traitsIO)
