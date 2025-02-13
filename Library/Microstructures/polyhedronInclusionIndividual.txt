@@ -1,15 +1,14 @@
 type=PolyhedronInclusions;
 style=individual;
-tag= polyIncl0;
-#mshFile=../../../MeshLibrary/sphere2D.msh;
-#mshFile=../../../MeshLibrary/cylinder2D.msh;
-mshFile=../../../MeshLibrary/cube2D_8nodes.msh;
+#mshFile=../../../Library/Meshes/sphere2D.msh;
+#mshFile=../../../Library/Meshes/cylinder2D.msh;
+mshFile=../../../Library/Meshes/unitCube8_2D.msh;
 
-# Transform y=A(x-x0)
+# Transform mesh coordinate x into y=Fx+x0
 x0=0 0 0;
-A=800 0 0
-  0 1300 0
-  0 0 1500];
-inclusionsEigenDistortions=0.03 0 0 0 0.03 0 0 0 0.03;
-inclusionVelocityReductionFactors=1;
-phaseIDs=0; # ID of secondPhase 
+F=200 0 0
+  0 300 0
+  0 0 100];
+eigenDistortion=0.03 0 0 0 0.03 0 0 0 0.03;
+velocityReductionFactor=1;
+phaseID=0; # ID of secondPhase 
