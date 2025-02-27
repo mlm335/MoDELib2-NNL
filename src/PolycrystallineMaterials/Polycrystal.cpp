@@ -43,168 +43,84 @@ namespace model
     Polycrystal<dim>::Polycrystal(const std::string& polyFile,
                                   const SimplicialMeshType& mesh_in) :
     /* init */ PolycrystallineMaterialBase(std::filesystem::path(polyFile).parent_path().string()+"/"+TextFileParser(polyFile).readString("materialFile",false),
-                            TextFileParser(polyFile).readScalar<double>("absoluteTemperature",true))
+                                           TextFileParser(polyFile).readScalar<double>("absoluteTemperature",true))
     /* init */,mesh(mesh_in)
     /* init */,grains(getGrains(polyFile))
     /* init */,grainBoundaries(getGrainBoundaries())
     /* init */,Omega(getAtomicVolume())
     {
         std::cout<<greenBoldColor<<"Created Polycrystal"<<defaultColor<<std::endl;
-        
-        // Construct Grains
-//        for(const auto& rIter : mesh.regions())
-//        {
-//            std::cout<<greenBoldColor<<"Creating Grain "<<rIter.second->regionID<<defaultColor<<std::endl;
-//
-//            //                const auto C2G(TextFileParser(polyFolder+"/polyCrystal.txt").readMatrix<double>("C2G"+std::to_string(rIter.second->regionID),dim,dim,true));
-//
-//            StaticID<Lattice<dim>>::set_count(rIter.second->regionID);
-//            grains().emplace(std::piecewise_construct,
-//                             std::forward_as_tuple(rIter.second->regionID),
-//                             std::forward_as_tuple(*(rIter.second),
-//                                                   *this,
-//                                                   polyFile));
-//        }
-        
-        // Construct GrainsBoundaries
-        //            grainBoundaryDislocations().clear();
-        //            int fileID=1;
-//        for(const auto& rgnBnd : mesh.regionBoundaries())
-//        {// loop over region boundaries
-//            for(const auto& face : rgnBnd.second.faces())
-//            {// loop over faces of each region boundary
-//                grainBoundaries.emplace(std::piecewise_construct,
-//                                          std::forward_as_tuple(rgnBnd.first),
-//                                          std::forward_as_tuple(rgnBnd.second,
-//                                                                face.second,
-//                                                                grain(rgnBnd.first.first),
-//                                                                grain(rgnBnd.first.second)
-//                                                                )
-//                                          );
-//            }
-//        }
-        
-        
-        //            if(grainBoundaryDislocations().size())
-        //            {
-        //                model::SequentialOutputFile<'B',1>::set_count(0);
-        //                model::SequentialOutputFile<'B',1>::set_increment(1);
-        //                model::SequentialOutputFile<'B',true> stressStraightFile;
-        //                size_t n=0;
-        //                for(const auto& sStraight : grainBoundaryDislocations())
-        //                {
-        //                    stressStraightFile<<n<<"\t"<<sStraight.P0.transpose()<<"\t"<<sStraight.P1.transpose()<<"\t"<<sStraight.b.transpose()<<std::endl;
-        //                    n++;
-        //                }
-        //            }
-        
+        StaticID<Lattice<dim>>::force_count(0);
+        StaticID<PlanarMeshFace<dim>>::force_count(0);
     }
 
 
-template <int dim>
-std::map<size_t,typename Polycrystal<dim>::GrainType> Polycrystal<dim>::getGrains(const std::string& polyFile) const
-{
-    std::map<size_t,typename Polycrystal<dim>::GrainType> temp;
-    for(const auto& rIter : mesh.regions())
+    template <int dim>
+    std::map<size_t,typename Polycrystal<dim>::GrainType> Polycrystal<dim>::getGrains(const std::string& polyFile) const
     {
-        std::cout<<greenBoldColor<<"Creating Grain "<<rIter.second->regionID<<defaultColor<<std::endl;
-        
-        //                const auto C2G(TextFileParser(polyFolder+"/polyCrystal.txt").readMatrix<double>("C2G"+std::to_string(rIter.second->regionID),dim,dim,true));
-        
-//        std::cout<<"StaticID<Lattice<dim>>::get_count()"<<StaticID<Lattice<dim>>::get_count()<<std::endl;
-        
-        StaticID<Lattice<dim>>::set_count(rIter.second->regionID);
-        temp.emplace(std::piecewise_construct,
+        std::map<size_t,typename Polycrystal<dim>::GrainType> temp;
+        for(const auto& rIter : mesh.regions())
+        {
+            std::cout<<greenBoldColor<<"Creating Grain "<<rIter.second->regionID<<defaultColor<<std::endl;
+            
+            StaticID<Lattice<dim>>::set_count(rIter.second->regionID);
+            temp.emplace(std::piecewise_construct,
                          std::forward_as_tuple(rIter.second->regionID),
                          std::forward_as_tuple(*(rIter.second),
                                                *this,
                                                polyFile));
-    }
-    
-    
-    
-    for(const auto& rgnBnd : mesh.regionBoundaries())
-    {// loop over region boundaries
-        for(const auto& face : rgnBnd.second.faces())
-        {// loop over faces of each region boundary
-            
-            
-            std::shared_ptr<GrainBoundary<dim>> gb(new GrainBoundary<dim>(rgnBnd.second,
-                                                                          face.second,
-                                                                          grain(rgnBnd.first.first),
-                                                                          grain(rgnBnd.first.second)));
-                                                   
-            temp.at(rgnBnd.first.first ).grainBoundaries().emplace(rgnBnd.first,gb);
-            temp.at(rgnBnd.first.second).grainBoundaries().emplace(rgnBnd.first,gb);
-//
-//            temp.emplace(std::piecewise_construct,
-//                                      std::forward_as_tuple(rgnBnd.first),
-//                                      std::forward_as_tuple(rgnBnd.second,
-//                                                            face.second,
-//                                                            grain(rgnBnd.first.first),
-//                                                            grain(rgnBnd.first.second)
-//                                                            )
-//                                      );
         }
+        
+        for(const auto& rgnBnd : mesh.regionBoundaries())
+        {// loop over region boundaries
+            for(const auto& face : rgnBnd.second.faces())
+            {// loop over faces of each region boundary
+                
+                
+                std::shared_ptr<GrainBoundary<dim>> gb(new GrainBoundary<dim>(rgnBnd.second,
+                                                                              face.second,
+                                                                              grain(rgnBnd.first.first),
+                                                                              grain(rgnBnd.first.second)));
+                
+                temp.at(rgnBnd.first.first ).grainBoundaries().emplace(rgnBnd.first,gb);
+                temp.at(rgnBnd.first.second).grainBoundaries().emplace(rgnBnd.first,gb);
+            }
+        }
+        
+        return temp;
     }
-    
-    return temp;
-}
 
-template <int dim>
-double Polycrystal<dim>::getAtomicVolume() const
-{
-    const double omg0(grains.begin()->second.singleCrystal->latticeBasis.determinant());
-    for(const auto& grain : grains)
+    template <int dim>
+    double Polycrystal<dim>::getAtomicVolume() const
     {
-        const double omg(grain.second.singleCrystal->latticeBasis.determinant());
-        if(std::fabs(omg-omg0)>FLT_EPSILON)
+        const double omg0(grains.begin()->second.singleCrystal->latticeBasis.determinant());
+        for(const auto& grain : grains)
         {
-            throw std::runtime_error("grains have different atomic volume");
+            const double omg(grain.second.singleCrystal->latticeBasis.determinant());
+            if(std::fabs(omg-omg0)>FLT_EPSILON)
+            {
+                throw std::runtime_error("grains have different atomic volume");
+            }
         }
+        
+        return omg0/this->atomsPerUnitCell;
     }
-    
-    return omg0/this->atomsPerUnitCell;
-}
 
-template <int dim>
-std::map<std::pair<size_t,size_t>,const GrainBoundary<dim>* const> Polycrystal<dim>::getGrainBoundaries() const
-{
-    std::map<std::pair<size_t,size_t>,const GrainBoundaryType* const> temp;
-//    for(const auto& rgnBnd : mesh.regionBoundaries())
-//    {// loop over region boundaries
-//        for(const auto& face : rgnBnd.second.faces())
-//        {// loop over faces of each region boundary
-//            temp.emplace(std::piecewise_construct,
-//                                      std::forward_as_tuple(rgnBnd.first),
-//                                      std::forward_as_tuple(rgnBnd.second,
-//                                                            face.second,
-//                                                            grain(rgnBnd.first.first),
-//                                                            grain(rgnBnd.first.second)
-//                                                            )
-//                                      );
-//        }
-//    }
-    
-    for(const auto& grain : grains)
+    template <int dim>
+    std::map<std::pair<size_t,size_t>,const GrainBoundary<dim>* const> Polycrystal<dim>::getGrainBoundaries() const
     {
-        for(const auto& gb : grain.second.grainBoundaries())
+        std::map<std::pair<size_t,size_t>,const GrainBoundaryType* const> temp;
+        
+        for(const auto& grain : grains)
         {
-            temp.emplace(gb.first,gb.second.get());
+            for(const auto& gb : grain.second.grainBoundaries())
+            {
+                temp.emplace(gb.first,gb.second.get());
+            }
         }
+        
+        return temp;
     }
-    
-    
-    return temp;
-}
-
-
-
-//    template <int dim>
-//    typename Polycrystal<dim>::GrainType& Polycrystal<dim>::grain(const size_t& k)
-//    {
-//        return grains.at(k);
-//    }
 
     template <int dim>
     const typename Polycrystal<dim>::GrainType& Polycrystal<dim>::grain(const size_t& k) const
@@ -212,41 +128,12 @@ std::map<std::pair<size_t,size_t>,const GrainBoundary<dim>* const> Polycrystal<d
         return grains.at(k);
     }
 
-
-
-//    template <int dim>
-//    std::map<size_t,typename Polycrystal<dim>::GrainType>& Polycrystal<dim>::grains()
-//    {
-//        return *this;
-//    }
-
-//    template <int dim>
-//    std::map<std::pair<size_t,size_t>,typename Polycrystal<dim>::GrainBoundaryType>& Polycrystal<dim>::grainBoundaries()
-//    {
-//        return *this;
-//    }
-//
-//    template <int dim>
-//    const std::map<std::pair<size_t,size_t>,typename Polycrystal<dim>::GrainBoundaryType>& Polycrystal<dim>::grainBoundaries() const
-//    {
-//        return *this;
-//    }
-
     template <int dim>
     const typename Polycrystal<dim>::GrainBoundaryType& Polycrystal<dim>::grainBoundary(const size_t& i,
                                                                                         const size_t& j) const
     {
-//        assert(i!=j && "GrainBoundary IDs cannot be the same.");
         return (i<j)? *grainBoundaries.at(std::make_pair(i,j)) : *grainBoundaries.at(std::make_pair(j,i));
     }
-
-//    template <int dim>
-//    typename Polycrystal<dim>::GrainBoundaryType& Polycrystal<dim>::grainBoundary(const size_t& i,
-//                                                                                  const size_t& j)
-//    {
-//        assert(i!=j && "GrainBoundary IDs cannot be the same.");
-//        return (i<j)? grainBoundaries.at(std::make_pair(i,j)) : grainBoundaries.at(std::make_pair(j,i));
-//    }
 
     template <int dim>
     typename Polycrystal<dim>::LatticeVectorType Polycrystal<dim>::latticeVectorFromPosition(const VectorDim& p,
@@ -278,7 +165,6 @@ std::map<std::pair<size_t,size_t>,const GrainBoundary<dim>* const> Polycrystal<d
         return reciprocalLatticeVectorFromPosition(p,&(mesh.simplices().begin()->second));
     }
 
-
     template <int dim>
     typename Polycrystal<dim>::VectorDim Polycrystal<dim>::randomPoint() const
     {
@@ -292,7 +178,6 @@ std::map<std::pair<size_t,size_t>,const GrainBoundary<dim>* const> Polycrystal<d
         /* */ mesh.xMin(2)+distribution(generator)*(mesh.xMax(2)-mesh.xMin(2));
         
         return P0;
-        
     }
 
     template <int dim>
@@ -320,7 +205,7 @@ std::map<std::pair<size_t,size_t>,const GrainBoundary<dim>* const> Polycrystal<d
         
     }
 
-template class Polycrystal<3>;
+    template class Polycrystal<3>;
 
 }
 #endif

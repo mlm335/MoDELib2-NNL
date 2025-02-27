@@ -109,6 +109,7 @@ PYBIND11_MODULE(pyMoDELib,m)
         .def("xMin",static_cast<const Eigen::Matrix<double,3,1>& (SimplicialMesh<3>::*)() const>(&SimplicialMesh<3>::xMin))
         .def("xMax",static_cast<const Eigen::Matrix<double,3,1>& (SimplicialMesh<3>::*)() const>(&SimplicialMesh<3>::xMax))
         .def("volume",&SimplicialMesh<3>::volume)
+        .def("xCenter",&SimplicialMesh<3>::xCenter)
     ;
 
     py::class_<PolycrystallineMaterialBase>(m,"PolycrystallineMaterialBase")
@@ -126,7 +127,6 @@ PYBIND11_MODULE(pyMoDELib,m)
     
     py::class_<Polycrystal<3>,PolycrystallineMaterialBase>(m,"Polycrystal")
         .def(py::init<const std::string&,const SimplicialMesh<3>&>())
-//        .def("mesh", &Polycrystal<3>::mesh)
         .def("randomPoint", &Polycrystal<3>::randomPoint)
         .def_readonly("grains", &Polycrystal<3>::grains)
         .def("grain", &Polycrystal<3>::grain)
@@ -134,6 +134,7 @@ PYBIND11_MODULE(pyMoDELib,m)
     
     py::class_<DislocationDynamicsBase<3>>(m,"DislocationDynamicsBase")
         .def(py::init<const std::string&>())
+        .def_readonly("mesh", &DislocationDynamicsBase<3>::mesh)
         .def_readonly("poly", &DislocationDynamicsBase<3>::poly)
         .def_readonly("simulationParameters", &DislocationDynamicsBase<3>::simulationParameters)
     ;

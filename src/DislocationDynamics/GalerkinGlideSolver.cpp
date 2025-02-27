@@ -198,7 +198,7 @@ namespace model
     }
 
     template <typename DislocationNetworkType>
-Eigen::VectorXd GalerkinGlideSolver<DislocationNetworkType>::lumpedSolve() const
+    Eigen::VectorXd GalerkinGlideSolver<DislocationNetworkType>::lumpedSolve() const
     {
         const auto t0= std::chrono::system_clock::now();
         std::cout<<", glideSolver "<<std::flush;
@@ -224,7 +224,6 @@ Eigen::VectorXd GalerkinGlideSolver<DislocationNetworkType>::lumpedSolve() const
                 TripletContainerType lumpedTriplets;
                 for (int k = 0; k < kqqZ.outerSize(); ++k)
                 {
-
                     for (SparseMatrixType::InnerIterator it(kqqZ, k); it; ++it)
                     {
                         if (it.row() == it.col())

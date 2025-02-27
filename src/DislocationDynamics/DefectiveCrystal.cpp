@@ -43,6 +43,7 @@ namespace model
         {
             this->emplace_back(new DislocationNetworkType(*this));
         }
+//        std::cout<<"Defective Crystal Done Constructor"<<std::endl;
     }
 
     template <int _dim>

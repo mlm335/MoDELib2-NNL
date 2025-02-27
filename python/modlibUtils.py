@@ -129,7 +129,7 @@ def readAUXtxt(filename):
     numGPs=int(auxFile.readline().rstrip())
     numPGPP=int(auxFile.readline().rstrip())
     aux=AUX();
-    aux.gaussPoints=np.empty([numGPs, 33])
+    aux.gaussPoints=np.empty([numGPs, 41])
     for k in np.arange(numNodes):
         np.meshNodes=np.fromstring(auxFile.readline().rstrip(), sep=' ')
     for k in np.arange(numGPs):

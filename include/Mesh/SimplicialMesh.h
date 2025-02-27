@@ -91,7 +91,6 @@ namespace model
         
         Eigen::Matrix<double,dim,Eigen::Dynamic> periodicBasis() const;
         
-//        std::vector<VectorDim> periodicShifts(const std::vector<int>& periodicImageSize) const;
 
         void insertSimplex(const typename SimplexTraits<dim,dim>::SimplexIDType& xIN,const int& regionID);
         
@@ -110,37 +109,22 @@ namespace model
                                                                 const Eigen::Matrix<double,dim,1>& P,
                                                                 const Simplex<dim,dim>* const guess,
                                                                 std::set<const Simplex<dim,dim>*>& searchSet) const;
-        
-        
         void checkSearch(const bool& searchAllRegions,
                          const Eigen::Matrix<double,dim,1>& P,
                          const Simplex<dim,dim>* const guess,
                          const std::pair<bool,const Simplex<dim,dim>*>& lastSearched) const;
-        
-        
         std::pair<bool,const Simplex<_dim,_dim>*> isStrictlyInsideMesh(const Eigen::Matrix<double,dim,1>& P,
                                                                      const Simplex<dim,dim>* const guess,
                                                                      const double& tol) const;
-        
         std::pair<bool,const Simplex<_dim,_dim>*> isOnMeshBoundary(const Eigen::Matrix<double,dim,1>& P, const Simplex<dim,dim>* const guess, const double& tol) const;
-        
         const Eigen::Matrix<double,_dim,1>& xMin() const;
-        
         const double& xMin(const int& k) const;
-        
         const Eigen::Matrix<double,_dim,1>& xMax() const;
-        
         const double& xMax(const int& k) const;
-        
         const Eigen::Matrix<double,_dim,1>& xCenter() const;
-        
-        
         const double& volume() const;
-        
         const MeshRegionBoundaryContainerType& regionBoundaries() const;
-        
         MeshRegionBoundaryContainerType& regionBoundaries();
-        
         const MeshRegionBoundaryType& regionBoundary(const int& i,const int& j) const;
         
     };

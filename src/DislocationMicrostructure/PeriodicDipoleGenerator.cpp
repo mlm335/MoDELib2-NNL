@@ -285,57 +285,59 @@ PeriodicDipoleGenerator::PeriodicDipoleGenerator(const PeriodicDipoleDensitySpec
                                                            slipSystem.s.cartesian(),prismaticGlidePlane->referencePlane->unitNormal,
                                                            P0,grainID,DislocationLoopIO<3>::SESSILELOOP);
                                         
-                                        
-                                        
-                                        const int halfNodeNumber(dipoleNodes/2);
-                                        if(halfNodeNumber < 0)
+                                        if(std::fabs(glideStep)>FLT_EPSILON)
                                         {
-                                            throw std::runtime_error("dipoleNodes="+std::to_string(halfNodeNumber)+"is smaller than 0");
-                                        }
-                                        const double halfDipoleLength(AB.norm()*0.5);
-                                        const VectorDimD dipoleDir(AB/AB.norm());
-                                        const VectorDimD shiftNodeLength(halfDipoleLength/(1.0*(halfNodeNumber+1))*dipoleDir);
-                                        
-                                        // First glide loop
-    //                                    const double glideStep=50.0;
-                                        std::vector<VectorDimD> firstNodePos;
-                                        firstNodePos.push_back(startPoint+lShift);
-                                        firstNodePos.push_back(startPoint+rShift);
-                                        if((rShift-lShift).cross(glideStep*prismaticGlidePlane->referencePlane->unitNormal).dot(glidePlane->referencePlane->unitNormal)>0.0)
-                                        {// loop is right-handed to glidePlane->referencePlane->unitNormal
-                                            glideStep*=-1;
-                                        }
-                                        firstNodePos.push_back(startPoint+rShift+glideStep*prismaticGlidePlane->referencePlane->unitNormal);
-                                        for(int k=1; k<=halfNodeNumber; k++)
-                                        { // Add nodes on rigth arm
-                                            firstNodePos.push_back(startPoint+rShift-k*shiftNodeLength+glideStep*prismaticGlidePlane->referencePlane->unitNormal);
-                                        }
-                                        for(int k=halfNodeNumber; k>0; k--)
-                                        { // Add nodes on left arm
-                                            firstNodePos.push_back(startPoint+lShift+k*shiftNodeLength+glideStep*prismaticGlidePlane->referencePlane->unitNormal);
-                                        }
-                                        firstNodePos.push_back(startPoint+lShift+glideStep*prismaticGlidePlane->referencePlane->unitNormal);
-                                                                                
-                                        mg.insertJunctionLoop(firstNodePos,glidePlane,
-                                                           -slipSystem.s.cartesian(),glidePlane->referencePlane->unitNormal,
-                                                           P0,grainID,DislocationLoopIO<3>::GLISSILELOOP);
+                                            const int halfNodeNumber(dipoleNodes/2);
+                                            if(halfNodeNumber < 0)
+                                            {
+                                                throw std::runtime_error("dipoleNodes="+std::to_string(halfNodeNumber)+"is smaller than 0");
+                                            }
+                                            const double halfDipoleLength(AB.norm()*0.5);
+                                            const VectorDimD dipoleDir(AB/AB.norm());
+                                            const VectorDimD shiftNodeLength(halfDipoleLength/(1.0*(halfNodeNumber+1))*dipoleDir);
+                                            
+                                            // First glide loop
+        //                                    const double glideStep=50.0;
+                                            std::vector<VectorDimD> firstNodePos;
+                                            firstNodePos.push_back(startPoint+lShift);
+                                            firstNodePos.push_back(startPoint+rShift);
+                                            if((rShift-lShift).cross(glideStep*prismaticGlidePlane->referencePlane->unitNormal).dot(glidePlane->referencePlane->unitNormal)>0.0)
+                                            {// loop is right-handed to glidePlane->referencePlane->unitNormal
+                                                glideStep*=-1;
+                                            }
+                                            firstNodePos.push_back(startPoint+rShift+glideStep*prismaticGlidePlane->referencePlane->unitNormal);
+                                            for(int k=1; k<=halfNodeNumber; k++)
+                                            { // Add nodes on rigth arm
+                                                firstNodePos.push_back(startPoint+rShift-k*shiftNodeLength+glideStep*prismaticGlidePlane->referencePlane->unitNormal);
+                                            }
+                                            for(int k=halfNodeNumber; k>0; k--)
+                                            { // Add nodes on left arm
+                                                firstNodePos.push_back(startPoint+lShift+k*shiftNodeLength+glideStep*prismaticGlidePlane->referencePlane->unitNormal);
+                                            }
+                                            firstNodePos.push_back(startPoint+lShift+glideStep*prismaticGlidePlane->referencePlane->unitNormal);
+                                                                                    
+                                            mg.insertJunctionLoop(firstNodePos,glidePlane,
+                                                               -slipSystem.s.cartesian(),glidePlane->referencePlane->unitNormal,
+                                                               P0,grainID,DislocationLoopIO<3>::GLISSILELOOP);
 
 
-                                        FiniteLineSegment<3> mirrowLine(lineP0,lineP1);
-                                        
-                                        // Second glide loop
-                                        std::vector<VectorDimD> secondNodePos;
-                                        for(const auto& pos : firstNodePos)
-                                        {
-                                            VectorDimD c=mirrowLine.snapToInfiniteLine(pos);
-                                            secondNodePos.push_back(2.0*c-pos);
-    //                                        secondNodePos.push_back(parallelglidePlane->referencePlane->snapToPlane(pos));
+                                            FiniteLineSegment<3> mirrowLine(lineP0,lineP1);
+                                            
+                                            // Second glide loop
+                                            std::vector<VectorDimD> secondNodePos;
+                                            for(const auto& pos : firstNodePos)
+                                            {
+                                                VectorDimD c=mirrowLine.snapToInfiniteLine(pos);
+                                                secondNodePos.push_back(2.0*c-pos);
+        //                                        secondNodePos.push_back(parallelglidePlane->referencePlane->snapToPlane(pos));
+                                            }
+                                            
+                                            
+                                            mg.insertJunctionLoop(secondNodePos,parallelglidePlane,
+                                                               slipSystem.s.cartesian(),parallelglidePlane->referencePlane->unitNormal,
+                                                               parallelglidePlane->referencePlane->snapToPlane(P0),grainID,DislocationLoopIO<3>::GLISSILELOOP);
                                         }
                                         
-                                        
-                                        mg.insertJunctionLoop(secondNodePos,parallelglidePlane,
-                                                           slipSystem.s.cartesian(),parallelglidePlane->referencePlane->unitNormal,
-                                                           parallelglidePlane->referencePlane->snapToPlane(P0),grainID,DislocationLoopIO<3>::GLISSILELOOP);
                                     }
                                     else
                                     {

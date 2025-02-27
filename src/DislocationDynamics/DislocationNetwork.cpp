@@ -41,9 +41,8 @@ namespace model
     /* init */,verboseDislocationNode(TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readScalar<int>("verboseDislocationNode",true))
     {
         assert(velocityReductionFactor>0.0 && velocityReductionFactor<=1.0);
-        
-        LoopNetworkType::verboseLevel=TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readScalar<int>("verboseLoopNetwork",false);
-        verboseDislocationNetwork=TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readScalar<int>("verboseDislocationNetwork",false);
+        LoopNetworkType::verboseLevel=TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readScalar<int>("verboseLoopNetwork",true);
+        verboseDislocationNetwork=TextFileParser(ddBase.simulationParameters.traitsIO.ddFile).readScalar<int>("verboseDislocationNetwork",true);
     }
 
     template <int dim, short unsigned int corder>
@@ -69,6 +68,11 @@ namespace model
     template <int dim, short unsigned int corder>
     void DislocationNetwork<dim,corder>::setConfiguration(const DDconfigIO<dim>& evl)
     {
+        DislocationNode<3,0>::force_count(0);
+        DislocationLoopNode<3,0>::force_count(0);
+        DislocationLoop<3,0>::force_count(0);
+        EshelbyInclusionBase<3>::force_count(0);
+
         this->loopLinks().clear(); // erase base network to clear current config
         
         // Create Loops
@@ -873,42 +877,57 @@ else
                     std::set<size_t> tempNext;
                     std::set_intersection(loopspPrev.begin(), loopspPrev.end(), loopsThis.begin(), loopsThis.end(), std::inserter(tempPrev, tempPrev.begin()));
                     std::set_intersection(loopsThis.begin(), loopsThis.end(), loopspNext.begin(), loopspNext.end(), std::inserter(tempNext, tempNext.begin()));
+                                        
+//                    if (tempPrev!=tempNext)
+//                    {
+//                        std::cout<<"For bnd network node"<<sharedLNptr->networkNode->sID<<" loops are "<<std::flush;
+//                        for (const auto& loop : loopsThis)
+//                        {
+//                            std::cout<<loop<<", ";
+//                        }
+//                        std::cout<<std::endl;
+//                        
+//                        std::cout<<"For prev network node"<<pPrevNetwork->sID<<" loops are "<<std::flush;
+//                        for (const auto& loop : loopspPrev)
+//                        {
+//                            std::cout<<loop<<", ";
+//                        }
+//                        std::cout<<std::endl;
+//                        
+//                        std::cout<<"For next network node"<<pNextNetwork->sID<<" loops are "<<std::flush;
+//                        for (const auto& loop : loopspNext)
+//                        {
+//                            std::cout<<loop<<", ";
+//                        }
+//                        std::cout<<std::endl;
+//                        throw std::runtime_error("BND node must have the same loops as the common loops between the internal nodes");
+//                    }
+//                    else
+//                    {
+//                        if (pPrevNetwork->sID < pNextNetwork->sID)
+//                        {
+//                            networkNodeLoopMap.emplace(std::make_pair(pPrevNetwork, pNextNetwork), tempPrev);
+//                        }
+//                        else
+//                        {
+//                            networkNodeLoopMap.emplace(std::make_pair(pNextNetwork, pPrevNetwork), tempPrev);
+//                        }
+//                    }
                     
-                    if (tempPrev!=tempNext)
-                    {
-                        std::cout<<"For bnd network node"<<sharedLNptr->networkNode->sID<<" loops are "<<std::flush;
-                        for (const auto& loop : loopsThis)
-                        {
-                            std::cout<<loop<<", ";
-                        }
-                        std::cout<<std::endl;
-                        
-                        std::cout<<"For prev network node"<<pPrevNetwork->sID<<" loops are "<<std::flush;
-                        for (const auto& loop : loopspPrev)
-                        {
-                            std::cout<<loop<<", ";
-                        }
-                        std::cout<<std::endl;
-                        
-                        std::cout<<"For next network node"<<pNextNetwork->sID<<" loops are "<<std::flush;
-                        for (const auto& loop : loopspNext)
-                        {
-                            std::cout<<loop<<", ";
-                        }
-                        std::cout<<std::endl;
-                        throw std::runtime_error("BND node must have the same loops as the common loops between the internal nodes");
-                    }
-                    else
+                    std::set<size_t> tempLoops;
+                    std::set_intersection(tempPrev.begin(), tempPrev.end(), tempNext.begin(), tempNext.end(), std::inserter(tempLoops, tempLoops.begin()));
+                    if(tempLoops.size())
                     {
                         if (pPrevNetwork->sID < pNextNetwork->sID)
                         {
-                            networkNodeLoopMap.emplace(std::make_pair(pPrevNetwork, pNextNetwork), tempPrev);
+                            networkNodeLoopMap.emplace(std::make_pair(pPrevNetwork, pNextNetwork), tempLoops);
                         }
                         else
                         {
-                            networkNodeLoopMap.emplace(std::make_pair(pNextNetwork, pPrevNetwork), tempPrev);
+                            networkNodeLoopMap.emplace(std::make_pair(pNextNetwork, pPrevNetwork), tempLoops);
                         }
                     }
+                    
                 }
             }
             else

@@ -15,7 +15,7 @@
 #include <assert.h>
 
 #include <TerminalColors.h>
-#include <NonCopyable.h>
+//#include <NonCopyable.h>
 #include <InstanceCount.h>
 
 #include <TrialFunctionTraits.h>

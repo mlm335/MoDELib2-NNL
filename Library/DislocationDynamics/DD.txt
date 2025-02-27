@@ -65,6 +65,7 @@ remeshFrequency=1; # Enable/disable node redistribution
 Lmin=25; # min segment length (in Burgers vector units)
 Lmax=100; # max segment length (in Burgers vector units)
 relativeAreaThreshold=0.001;
+absoluteAreaThreshold=0.0;
 
 ######################################
 # DISLOCATION JUNCTIONS

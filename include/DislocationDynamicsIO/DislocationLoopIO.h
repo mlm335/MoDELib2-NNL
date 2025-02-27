@@ -42,7 +42,7 @@ namespace model
         /* init */,grainID(dL.grain.grainID)
         /* init */,loopType(dL.loopType)
         /* init */,loopLength(dL.network().outputLoopLength? dL.loopLength() : std::make_tuple(0.0,0.0,0.0,0.0))
-        /* init */,slippedArea(0.0)
+        /* init */,slippedArea(dL.slippedArea())
         {
             
         }

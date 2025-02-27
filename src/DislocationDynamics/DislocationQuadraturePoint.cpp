@@ -358,6 +358,8 @@ namespace model
     {
         for(const auto& shift : parentSegment.network().ddBase.periodicShifts)
         {
+//            std::cout<<"shift="<<shift.transpose()<<std::endl;
+
             SegmentSegmentDistance<dim> ssd(ss.P0,ss.P1,parentSegment.source->get_P()+shift,parentSegment.sink->get_P()+shift);
             //                        const double dr(ssd.dMin/(L0+ss.length));
             const double dr(ssd.dMin/(L0));
@@ -366,6 +368,7 @@ namespace model
             {// full interaction
                 for (auto& qPoint : quadraturePoints())
                 {
+//                    std::cout<<"qPoint="<<qPoint.qID<<", r="<<qPoint.r.transpose()<<std::endl;
                     qPoint.stress += ss.stress(qPoint.r+shift);
                 }
             }
@@ -401,7 +404,8 @@ namespace model
     template<int dim,int corder>
     void DislocationQuadraturePointContainer<dim,corder>::update(const LinkType& parentSegment,const bool& isClimbStep)
     {
-                
+//        std::cout<<parentSegment.tag()<<" updating"<<std::endl;
+
         const bool useLoopBasedKernels(false);
         
         if(this->size())
@@ -438,12 +442,8 @@ namespace model
                 {
                     for(const auto& link : parentSegment.network().networkLinks())
                     {
-                        if(   !link.second.lock()->hasZeroBurgers()
-//                           && !(link.second.lock()->isBoundarySegment() && parentSegment.network().ddBase.simulationParameters.simulationType==DDtraitsIO::FINITE_NO_FEM) // exclude boundary segments even if they are non-zero Burgers
-                           //                           && !(link.second.lock()->isVirtualBoundarySegment() && parentSegment.network().simulationParameters.simulationType==DDtraitsIO::PERIODIC_IMAGES)
-                           )
+                        if(!link.second.lock()->hasZeroBurgers())
                         {
-                            
                             const StraightDislocationSegment<dim>& ss(link.second.lock()->straight);
                             updateKernel(parentSegment,ss,L0,c);
                         }

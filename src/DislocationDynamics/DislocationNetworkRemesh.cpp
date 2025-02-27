@@ -18,6 +18,7 @@ namespace model
     /* init */ DN(DN_in)
     /* init */,Lmax(TextFileParser(DN.ddBase.simulationParameters.traitsIO.ddFile).readScalar<double>("Lmax",true))
     /* init */,Lmin(TextFileParser(DN.ddBase.simulationParameters.traitsIO.ddFile).readScalar<double>("Lmin",true))
+    /* init */,absoluteAreaThreshold(TextFileParser(DN.ddBase.simulationParameters.traitsIO.ddFile).readScalar<double>("absoluteAreaThreshold",true))
     /* init */,relativeAreaThreshold(TextFileParser(DN.ddBase.simulationParameters.traitsIO.ddFile).readScalar<double>("relativeAreaThreshold",true))
     /* init */,remeshFrequency(TextFileParser(DN.ddBase.simulationParameters.traitsIO.ddFile).readScalar<int>("remeshFrequency",true))
     {
@@ -43,9 +44,32 @@ namespace model
                 remeshByExpansion();
                 contract0chordSegments();
                 remove0AreaLoopAcrossBnd();
+                removeCollapsedLoops();
 //                contractBoundaryNodes(); //Added by Yash
             }
         }
+    }
+
+template <typename DislocationNetworkType>
+void DislocationNetworkRemesh<DislocationNetworkType>::removeCollapsedLoops()
+{
+        std::cout << "        Remeshing network: removeCollapsedLoops... " << std::flush;
+//        std::cout<<"Removing collapsed via climb... " << std::flush;
+        const auto t0 = std::chrono::system_clock::now();
+        std::deque<size_t> loopIDs;
+        for(const auto& loop : DN.loops())
+        {
+            if( (loop.second.lock()->isIsolated() && loop.second.lock()->rightHandedUnitNormalOld().dot(loop.second.lock()->rightHandedUnitNormal())<-FLT_EPSILON) || (loop.second.lock()->isIsolated() && loop.second.lock()->slippedArea()<absoluteAreaThreshold) )
+            {
+                loopIDs.push_back(loop.second.lock()->sID);
+            }
+        }
+        for(const auto& loopID : loopIDs)
+        {
+            DN.deleteLoop(loopID);
+        }
+        std::cout<<"("<<loopIDs.size()<<" removed)"<<std::endl;
+        std::cout<<magentaColor<<" ["<<(std::chrono::duration<double>(std::chrono::system_clock::now()-t0)).count()<<" sec]"<<defaultColor<<std::endl;
     }
     
     /**************************************************************************/

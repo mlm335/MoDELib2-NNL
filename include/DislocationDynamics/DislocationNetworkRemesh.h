@@ -31,6 +31,7 @@ namespace model
         
         const double Lmax;
         const double Lmin;
+        const double absoluteAreaThreshold;
         const double relativeAreaThreshold;
         const short unsigned int remeshFrequency;
         
@@ -41,6 +42,7 @@ namespace model
         void contractBoundaryNodes(); //This function contracts boundary nodes if they are at the same position and share atleast one same neightbors
         void contract0chordSegments();
         void remove0AreaLoopAcrossBnd();
+        void removeCollapsedLoops();
 //        static double minMeshSize(const SimplicialMesh<dim> &mesh);
     };
     

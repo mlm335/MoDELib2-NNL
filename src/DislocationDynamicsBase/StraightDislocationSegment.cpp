@@ -70,8 +70,8 @@ namespace model
             const Scalar bYt(b.cross(Y).dot(t));
 
             
-//            const Scalar f1(2.0/Y2);
-            const Scalar f1(EwaldLength>FLT_EPSILON? 2.0*erfc(Y2/EwaldLength/EwaldLength)/Y2 : 2.0/Y2);
+            const Scalar f1(2.0/Y2);
+//            const Scalar f1(EwaldLength>FLT_EPSILON? 2.0*erfc(Y2/EwaldLength/EwaldLength)/Y2 : 2.0/Y2);
 //            const Scalar f1(EwaldLength>FLT_EPSILON? 2.0*erfc(Ra/EwaldLength)/Y2 : 2.0/Y2);
 //            const Scalar f1(EwaldLength>FLT_EPSILON? 2.0*erfc(sqrt(Y2)/EwaldLength)/Y2 : 2.0/Y2);
 
@@ -86,29 +86,6 @@ namespace model
             
 #elif _MODEL_NON_SINGULAR_DD_ == 1 /* Cai's non-singular theory */
 
-//            const double Ra2=r.squaredNorm()+DislocationFieldBase<dim>::a2;
-//            const double Ra=sqrt(Ra2);
-//            const double Ra3=std::pow(Ra,3);
-//            const double rdt=r.dot(t);
-//            const double rdt2=std::pow(rdt,2);
-//            const double A1=-(rdt*(3.0*Ra2-rdt2))/(std::pow(Ra2-rdt2,2)*Ra3);
-//            const double A2=1.0/Ra3-rdt*A1;
-//            const double A6=-rdt/((Ra2-rdt2)*Ra);
-//            const double A3=-rdt/Ra3+A6+rdt2*A1;
-//            const double A4=A6+DislocationFieldBase<dim>::a2*A1;
-//            const double A5=-material.C1*A6-0.5*DislocationFieldBase<dim>::a2*material.C1*A1;
-//            const double A7=material.nu/Ra-rdt*A6-0.5*DislocationFieldBase<dim>::a2*material.C1*A2;
-//            
-//            const double rbt(r.cross(b).dot(t));
-//            
-//            return  0.5*rbt*A1*r*r.transpose()
-//            /*  */ +    rbt*A2*t*r.transpose()
-//            /*  */ +0.5*rbt*A3*t*t.transpose()
-//            /*  */ +0.5*rbt*A4*MatrixDim::Identity()
-//            /*  */ +A5*r.cross(b)*t.transpose()
-//            /*  */ +A6*t.cross(b)*r.transpose()
-//            /*  */ +A7*t.cross(b)*t.transpose();
-
             const Scalar Ra2=r.squaredNorm()+DislocationFieldBase<dim>::a2;
             const Scalar Ra(sqrt(Ra2));
             const VectorDim Ya(r+Ra*t);
@@ -119,9 +96,12 @@ namespace model
             
             
 //            THIS MUST USE Ya, not Ra, otherwise code goes crazy
-            const Scalar f1(EwaldLength>FLT_EPSILON? 2.0*erfc(Ya2a2/EwaldLength/EwaldLength)/Ya2a2 : 2.0/Ya2a2);
+            const Scalar f1(2.0/Ya2a2);
+//            const Scalar f1(EwaldLength>FLT_EPSILON? 2.0*erfc(Ya2a2/EwaldLength/EwaldLength)/Ya2a2 : 2.0/Ya2a2);
 //          const Scalar f1(EwaldLength>FLT_EPSILON? 2.0*erfc(Ra/EwaldLength)/Ya2a2 : 2.0/Ya2a2);
 //            const Scalar f1(EwaldLength>FLT_EPSILON? 2.0*erfc(sqrt(Ya2a2)/EwaldLength)/Ya2a2 : 2.0/Ya2a2);
+//            std::cout<<"f1="<<f1<<", 2.0/Ya2a2="<<2.0/Ya2a2<<std::endl;
+
 
             return f1*material.C1*(1.0+DislocationFieldBase<dim>::a2/Ya2a2)*t*bYa.transpose()
             /*  */+f1*material.C1*0.5*DislocationFieldBase<dim>::a2/Ra2*t*b.cross(r).transpose()
@@ -170,7 +150,8 @@ namespace model
                                /*  */-bAb*tAt*(1.5+logYat-DislocationFieldBase<dim>::a2/zaYat)
                                /*  */-bAt*bt*tAt*(0.5+logYat+zt/Yat)
                                /*  */+tAt/Yat*(zbA*zb/za+bAt*zb+bt*zbA));
-            return EwaldLength>FLT_EPSILON? erfc(za/EwaldLength)*energyInf : energyInf;
+//            return EwaldLength>FLT_EPSILON? erfc(za/EwaldLength)*energyInf : energyInf;
+            return energyInf;
         }
                 
         template <int dim>
@@ -211,7 +192,9 @@ namespace model
         typename StraightDislocationSegment<dim>::MatrixDim StraightDislocationSegment<dim>::stress(const VectorDim& x) const
         {
             const MatrixDim temp = nonSymmStress(x);
-            return material.C2*(temp+temp.transpose());
+//            std::cout<<"stress="<<material.C2*(temp+temp.transpose())<<std::endl;
+            const double EwaldFactor(EwaldLength>FLT_EPSILON? erfc((0.5*(P0+P1)-x).norm()/EwaldLength) : 1.0);
+            return material.C2*EwaldFactor*(temp+temp.transpose());
 //            const Eigen::Matrix<float,dim,dim> tempF((material.C2*(temp+temp.transpose())).template cast<float>());
 //            return tempF.template cast<double>();
         }
@@ -227,8 +210,8 @@ namespace model
         template <int dim>
         double StraightDislocationSegment<dim>::elasticInteractionEnergy(const VectorDim& xA,const VectorDim& tA,const VectorDim& bA) const
         {
-            
-            return -0.5*material.C2*(elasticInteractionEnergy_kernel(P1-xA,tA,bA)-elasticInteractionEnergy_kernel(P0-xA,tA,bA));
+            const double EwaldFactor(EwaldLength>FLT_EPSILON? erfc((0.5*(P0+P1)-xA).norm()/EwaldLength) : 1.0);
+            return -0.5*material.C2*EwaldFactor*(elasticInteractionEnergy_kernel(P1-xA,tA,bA)-elasticInteractionEnergy_kernel(P0-xA,tA,bA));
         }
         
 

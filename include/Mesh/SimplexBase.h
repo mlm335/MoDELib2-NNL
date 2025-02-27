@@ -9,7 +9,7 @@
 #define model_SimplexBase_H_
 
 #include <StaticID.h>
-#include <NonCopyable.h>
+//#include <NonCopyable.h>
 #include <SimplexTraits.h>
 #include <SimplexObserver.h>
 
@@ -19,9 +19,7 @@ namespace model
 	/**************************************************************************/
 	/**************************************************************************/	
 	template<short int _dim, short int order>
-	struct SimplexBase :
-    /* inheritance    */ public NonCopyable,
-    /* inheritance    */ public StaticID<SimplexBase<_dim,order> >
+	struct SimplexBase : public StaticID<SimplexBase<_dim,order> >
     {
      
         static constexpr short int dim=_dim;

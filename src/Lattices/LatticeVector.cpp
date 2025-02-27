@@ -164,7 +164,8 @@ namespace model
         {
             std::cout << "d2contra, nd=" << nd.transpose() << std::endl;
             std::cout << "d2contra, rd=" << rd.transpose() << std::endl;
-            assert(0 && "Input vector is not a lattice vector");
+            throw std::runtime_error("Input vector is not a lattice vector");
+//            assert(0 && "Input vector is not a lattice vector");
         }
         return rd.template cast<long int>();
     }
