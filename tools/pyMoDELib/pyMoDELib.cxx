@@ -141,6 +141,7 @@ PYBIND11_MODULE(pyMoDELib,m)
     
     py::class_<MicrostructureBase<3>>(m,"MicrostructureBase")
         .def("displacement", static_cast<Eigen::Matrix<double,Eigen::Dynamic,3> (MicrostructureBase<3>::*)(Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,3>>) const>(&MicrostructureBase<3>::displacement))
+        .def("stress", static_cast<std::vector<Eigen::Matrix<double,3,3>> (MicrostructureBase<3>::*)(Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,3>>) const>(&MicrostructureBase<3>::stress))
     ;
     
     py::class_<MicrostructureContainer<3>,MicrostructureBase<3>>(m,"MicrostructureContainer",py::multiple_inheritance())
@@ -315,6 +316,8 @@ PYBIND11_MODULE(pyMoDELib,m)
         .def_readwrite("targetDensity", &PrismaticLoopDensitySpecification::targetDensity)
         .def_readwrite("radiusDistributionMean", &PrismaticLoopDensitySpecification::radiusDistributionMean)
         .def_readwrite("radiusDistributionStd", &PrismaticLoopDensitySpecification::radiusDistributionStd)
+        .def_readwrite("allowedGrainIDs", &PrismaticLoopDensitySpecification::allowedGrainIDs)
+        .def_readwrite("allowedSlipSystemIDs", &PrismaticLoopDensitySpecification::allowedSlipSystemIDs)
     ;
     
     py::class_<PrismaticLoopIndividualSpecification

@@ -38,7 +38,6 @@ namespace model
     template <int dim>
     Eigen::Matrix<double,Eigen::Dynamic,dim> MicrostructureBase<dim>::displacement(Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,dim>> points) const
     {
-//        std::cout<<"points=\n"<<points<<std::endl;
         Eigen::Matrix<double,Eigen::Dynamic,dim> temp(Eigen::Matrix<double,Eigen::Dynamic,3>::Zero(points.rows(),dim));
         #ifdef _OPENMP
         #pragma omp parallel for
@@ -49,6 +48,20 @@ namespace model
         }
         return temp;
     }
+
+template <int dim>
+std::vector<Eigen::Matrix<double,dim,dim>> MicrostructureBase<dim>::stress(Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,dim>> points) const
+{
+    std::vector<Eigen::Matrix<double,dim,dim>> temp(points.rows(),Eigen::Matrix<double,dim,dim>::Zero());
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
+    for(long int k=0;k<points.rows();++k)
+    {
+        temp[k]=stress(points.row(k),nullptr,nullptr,nullptr);
+    }
+    return temp;
+}
 
 template <int dim>
 std::set<const Grain<dim>*> MicrostructureBase<dim>::pointGrains(const VectorDim& x, const NodeType* const node, const ElementType* const ele,const SimplexDim* const guess) const

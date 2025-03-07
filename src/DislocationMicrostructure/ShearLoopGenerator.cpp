@@ -33,26 +33,45 @@ ShearLoopGenerator::ShearLoopGenerator(const ShearLoopDensitySpecification& spec
         //        const double radiusDistributionStd(this->parser.readScalar<double>("radiusDistributionStd",true));
         std::normal_distribution<double> radiusDistribution(spec.radiusDistributionMean/mg.ddBase.poly.b_SI,spec.radiusDistributionStd/mg.ddBase.poly.b_SI);
         std::mt19937 generator;
+        
+        std::uniform_int_distribution<> allowedSlipSystemDist(0,spec.allowedSlipSystemIDs.size()-1);
+
+        std::set<int> allowedGrainIDsSet;
+        for(const auto& gID : spec.allowedGrainIDs)
+        {
+            allowedGrainIDsSet.insert(gID);
+        }
+        const double allowAllGrains(allowedGrainIDsSet.size() ? (*allowedGrainIDsSet.begin())<0 : true);
+
+        
         while(density<spec.targetDensity)
         {
             const std::pair<LatticeVector<3>, int> rp(mg.ddBase.poly.randomLatticePointInMesh());
             const LatticeVector<3> L0=rp.first;
             const size_t grainID=rp.second;
-            std::uniform_int_distribution<> ssDist(0,mg.ddBase.poly.grain(grainID).singleCrystal->slipSystems().size()-1);
-            const int rSS(ssDist(generator)); // a random SlipSystem
-            const double radius(radiusDistribution(generator));
-            try
+            
+            if(allowAllGrains || allowedGrainIDsSet.find(grainID)!=allowedGrainIDsSet.end())
             {
-                const bool success=generateSingle(mg,rSS,L0.cartesian(),radius,spec.numberOfSides);
-                if(success)
+                std::uniform_int_distribution<> ssDist(0,mg.ddBase.poly.grain(grainID).singleCrystal->slipSystems().size()-1);
+//                const int rSS(ssDist(generator)); // a random SlipSystem
+                const int allowedIndex(allowedSlipSystemDist(generator));
+                const int allowedSlipID(spec.allowedSlipSystemIDs[allowedIndex]);
+                const int rSS(allowedSlipID<0 ? ssDist(generator) : allowedSlipID); // a random SlipSystem
+
+                const double radius(radiusDistribution(generator));
+                try
                 {
-                    density+=2.0*std::numbers::pi*radius/mg.ddBase.mesh.volume()/std::pow(mg.ddBase.poly.b_SI,2);
-                    std::cout<<"shear loop density="<<density<<std::endl;
+                    const bool success=generateSingle(mg,rSS,L0.cartesian(),radius,spec.numberOfSides);
+                    if(success)
+                    {
+                        density+=2.0*std::numbers::pi*radius/mg.ddBase.mesh.volume()/std::pow(mg.ddBase.poly.b_SI,2);
+                        std::cout<<"shear loop density="<<density<<std::endl;
+                    }
                 }
-            }
-            catch(const std::exception& e)
-            {
-                
+                catch(const std::exception& e)
+                {
+                    
+                }
             }
         }
     }
@@ -128,10 +147,15 @@ bool ShearLoopGenerator::generateSingle(MicrostructureGenerator& mg,const int& r
         
         //            std::map<VectorDimD,size_t,CompareVectorsByComponent<double,dim,float>> uniqueNetworkNodeMap; // networkNodePosition->networkNodeID
         
-        mg.insertJunctionLoop(loopNodePos,glidePlane,
-                              slipSystem.s.cartesian(),glidePlane->referencePlane->unitNormal,
-                              P0,grainID,DislocationLoopIO<3>::GLISSILELOOP);
-        success=true;
+//        mg.insertJunctionLoop(loopNodePos,glidePlane,
+//                              slipSystem.s.cartesian(),glidePlane->referencePlane->unitNormal,
+//                              P0,grainID,DislocationLoopIO<3>::GLISSILELOOP);
+//        success=true;
+        
+        
+        success=mg.insertJunctionLoop(loopNodePos,glidePlane,
+                                      slipSystem.s.cartesian(),glidePlane->referencePlane->unitNormal,
+                                      P0,grainID,DislocationLoopIO<3>::GLISSILELOOP);
     }
     else
     {

@@ -43,7 +43,9 @@ spec=pyMoDELib.PrismaticLoopDensitySpecification()
 spec.targetDensity=5.0e13
 spec.radiusDistributionMean=3e-08
 spec.radiusDistributionStd=0e-08
-#microstructureGenerator.addPrismaticLoopDensity(spec)
+spec.allowedGrainIDs=np.array([-1]); # set of grain IDs where loops are allowed. Use -1 for all grains
+allowedSlipSystemIDs=np.array([-1]); # set of slip system IDs whose Burgers vector are allowed to be the prism axis. Use -1 for all slip systems
+microstructureGenerator.addPrismaticLoopDensity(spec)
 
 spec=pyMoDELib.PrismaticLoopIndividualSpecification()
 spec.slipSystemIDs=[0,7,13]
@@ -92,7 +94,7 @@ spec.allowOverlap=0;
 spec.allowOutside=0;
 spec.velocityReductionFactor=1.0;
 spec.phaseID=0;
-microstructureGenerator.addSphericalInclusionDensity(spec)
+#microstructureGenerator.addSphericalInclusionDensity(spec)
 
 spec=pyMoDELib.SphericalInclusionIndividualSpecification()
 spec.radii_SI=[27.0e-9,27.0e-9]

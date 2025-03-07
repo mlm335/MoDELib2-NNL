@@ -23,7 +23,9 @@ namespace model
         int numberOfSides;
         double radiusDistributionMean;
         double radiusDistributionStd;
-        
+        std::vector<int> allowedGrainIDs;
+        std::vector<int> allowedSlipSystemIDs;
+
         ShearLoopDensitySpecification();
         ShearLoopDensitySpecification(const std::string& fileName);
     };

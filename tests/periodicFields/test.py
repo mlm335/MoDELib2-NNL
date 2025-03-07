@@ -65,8 +65,7 @@ if compute:
     pf.absoluteTemperature=300;
     pf.meshFile=meshFile
     pf.alignToSlipSystem0=1;
-    pf.compute()
-    pf.boxScaling=np.round(np.array([300e-10,180e-10,400e-10])/pf.boxEdgesLatticeLengths/b_SI) # must be a vector of integers
+    pf.boxScaling=np.array([300e-10,180e-10,400e-10])/b_SI # length of box edges in Burgers vector units
     pf.periodicFaceIDs=np.array([-1])
     pf.write('inputFiles')
 

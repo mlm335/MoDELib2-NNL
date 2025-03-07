@@ -121,7 +121,7 @@ struct PolyPoint
         size_t insertInclusion(const VectorDimD& pos,const double& R, const Eigen::Matrix<double,dim,dim>& eT, const double& vrc,const int&type);
         size_t insertInclusion(const std::map<size_t,Eigen::Vector3d>& nodes,const std::map<size_t,std::vector<size_t>>& faceMap, const Eigen::Matrix<double,dim,dim>& eT, const double& vrc,const int&type);
         void writeConfigFiles(const size_t& fileID);
-        void insertJunctionLoop(const std::vector<VectorDimD>& loopNodePos,
+        bool insertJunctionLoop(const std::vector<VectorDimD>& loopNodePos,
                                 const std::shared_ptr<PeriodicGlidePlane<3>>& periodicPlane,
                                 const VectorDimD& b,
                                 const VectorDimD& unitNormal,

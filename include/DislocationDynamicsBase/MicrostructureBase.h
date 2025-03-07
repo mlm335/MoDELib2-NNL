@@ -65,6 +65,7 @@ namespace model
         virtual VectorMSize mobileConcentration(const VectorDim&, const NodeType* const, const ElementType* const,const SimplexDim* const) const = 0;
 
         Eigen::Matrix<double,Eigen::Dynamic,dim> displacement(Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,dim>>) const;
+        std::vector<Eigen::Matrix<double,dim,dim>> stress(Eigen::Ref<const Eigen::Matrix<double,Eigen::Dynamic,dim>>) const;
 
     };
 

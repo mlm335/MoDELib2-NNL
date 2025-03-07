@@ -17,6 +17,8 @@ namespace model
     /* init */,targetDensity(0.0)
     /* init */,radiusDistributionMean(0.0)
     /* init */,radiusDistributionStd(0.0)
+    /* init */,allowedGrainIDs({-1})
+    /* init */,allowedSlipSystemIDs({-1})
     {
         
     }
@@ -26,6 +28,8 @@ namespace model
     /* init */,targetDensity(this->parser->readScalar<double>("targetDensity_SI",true))
     /* init */,radiusDistributionMean(this->parser->readScalar<double>("radiusDistributionMean_SI",true))
     /* init */,radiusDistributionStd(this->parser->readScalar<double>("radiusDistributionStd_SI",true))
+    /* init */,allowedGrainIDs(this->parser->readArray<int>("allowedGrainIDs",true))
+    /* init */,allowedSlipSystemIDs(this->parser->readArray<int>("allowedSlipSystemIDs",true))
     {
         
     }

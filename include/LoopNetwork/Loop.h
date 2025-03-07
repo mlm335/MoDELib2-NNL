@@ -335,9 +335,12 @@ namespace model
         {
             for(const auto& link : loopLinks())
             {
-                if(link->networkLink()->loopLinks().size()!=1)
+                if(link->networkLink())
                 {
-                    return false;
+                    if(link->networkLink()->loopLinks().size()!=1)
+                    {
+                        return false;
+                    }
                 }
             }
             return true;

@@ -758,7 +758,7 @@ namespace model
     }
 
     template<int dim>
-    typename PeriodicGlidePlane<dim>::VectorDim PeriodicGlidePlane<dim>::findPatch(const typename PeriodicGlidePlane<dim>::VectorLowerDim& P0,const VectorDim& guessShift)
+    std::pair<typename PeriodicGlidePlane<dim>::VectorDim,bool> PeriodicGlidePlane<dim>::findPatch(const typename PeriodicGlidePlane<dim>::VectorLowerDim& P0,const VectorDim& guessShift)
     {
         
         PeriodicPatchBoundary<dim> patchBoundary(glidePlaneFactory,referencePlane);
@@ -801,20 +801,13 @@ namespace model
                 case 1:
                 {
                     assert(lastPatch.get()==(*crossdEdges.begin())->patch);
+                    if((*crossdEdges.begin())->deltaShift.squaredNorm()<FLT_EPSILON)
+                    {
+                        return std::make_pair(VectorDim::Zero(),false);
+                    }
                     const VectorDim newShift((*crossdEdges.begin())->deltaShift+(*crossdEdges.begin())->patch->shift);
-                    //                    const auto shiftIter(usedPatches.find(newShift));
                     lastPatch=patchBoundary.getPatch(newShift);
                     currentPatches.push_back(lastPatch); // keep patches alive durin current line segment search
-                    //                    if(shiftIter==usedPatches.end())
-                    //                    {
-                    //                        lastPatch=usedPatches.emplace(newShift,new PeriodicPlanePatch<dim>(*this,newShift)).first->second;
-                    //                    }
-                    //                    else
-                    //                    {
-                    //                        lastPatch=shiftIter->second;
-                    //                    }
-                    //                    usedPatches.emplace(new PeriodicPlanePatch<dim>(*this,));
-                    //getPatch(getShift(**crossdEdges.begin())+(*crossdEdges.begin())->patch->shift);
                     break;
                 }
                     
@@ -822,6 +815,10 @@ namespace model
                 {
                     assert(lastPatch.get()==(*crossdEdges.begin())->patch);
                     assert((*crossdEdges.begin())->patch==(*crossdEdges.rbegin())->patch);
+                    if(((*crossdEdges.begin())->deltaShift+(*crossdEdges.rbegin())->deltaShift).squaredNorm()<FLT_EPSILON)
+                    {
+                        return std::make_pair(VectorDim::Zero(),false);
+                    }
                     const VectorDim newShift((*crossdEdges.begin())->deltaShift+(*crossdEdges.rbegin())->deltaShift+(*crossdEdges.begin())->patch->shift);
                     lastPatch=patchBoundary.getPatch(newShift);
                     currentPatches.push_back(lastPatch); // keep patches alive durin current line segment search
@@ -851,7 +848,7 @@ namespace model
             }
         }
         assert(lastPatch->contains(P0));
-        return lastPatch->shift;
+        return std::make_pair(lastPatch->shift,true);
     }
 
     template<int dim>

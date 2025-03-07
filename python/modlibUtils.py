@@ -65,8 +65,8 @@ class PolyCrystalFile(dict):
         x3=self.grain1globalX3/np.linalg.norm(self.grain1globalX3);
         self.C2G=np.array([x1,np.cross(x3,x1),x3]);
         
-        if self.alignToSlipSystem0:
-            self.boxEdges=self.C2G
+#        if self.alignToSlipSystem0:
+#            self.boxEdges=self.C2G
         
         # Find lattice vectors (columns of L) aligned to boxEdges
 #        L=np.zeros((3,3))
@@ -85,7 +85,8 @@ class PolyCrystalFile(dict):
                 nr[i]=n[i]*dp/d[i]
             self.boxEdgesLatticeDirections[:,j]=self.A@nr.transpose()
             self.boxEdgesLatticeLengths[j]=np.linalg.norm(self.boxEdgesLatticeDirections[:,j])
-            self.F[:,j]=self.C2G@self.boxEdgesLatticeDirections[:,j]*self.boxScaling[j]
+            #self.F[:,j]=self.C2G@self.boxEdgesLatticeDirections[:,j]*self.boxScaling[j]
+            self.F[:,j]=self.C2G@self.boxEdgesLatticeDirections[:,j]*np.round(self.boxScaling[j]/self.boxEdgesLatticeLengths[j])
         
     def write(self,folderName):
         self.compute()
@@ -217,6 +218,7 @@ def setInputVector(fileName,variable,newVal,newCom):
             foundSemiCol=line.find(';');
             if (foundPound==-1 or foundPound > foundSemiCol) and foundEqual>0 and variable in line:
                 line=variable+'='+' '.join(map(str, newVal))+'; # '+newCom+'\n'
+                print(line, file=sys.stderr)
             sys.stdout.write(line)
 
 

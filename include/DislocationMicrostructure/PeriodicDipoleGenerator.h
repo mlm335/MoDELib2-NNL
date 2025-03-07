@@ -51,7 +51,7 @@ class PeriodicDipoleGenerator //: public MicrostructureGeneratorBase
     typedef Eigen::Matrix<double,3,1> VectorDimD;
 
     
-    static void generateSingle(MicrostructureGenerator& mg,const int& rSS,const VectorDimD& dipolePoint,const int& exitFaceID,const int& dipoleHeight,const int& dipoleNodes,double glideStep);
+    static bool generateSingle(MicrostructureGenerator& mg,const int& rSS,const VectorDimD& dipolePoint,const int& exitFaceID,const int& dipoleHeight,const int& dipoleNodes,double glideStep);
     
     
 //    static void insertJunctionLoop(MicrostructureGenerator& mg,

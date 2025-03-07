@@ -29,8 +29,6 @@ namespace model
     SingleGlidePlaneActor::SingleGlidePlaneActor(const GlidePlane<3>& glidePlane_in) :
     /* init */ glidePlane(glidePlane_in)
     {
-        
-        
     }
 
     void SingleGlidePlaneActor::appendClosedPolygon(const std::vector<Eigen::Matrix<double,2,1>>& newPoints)
@@ -67,7 +65,6 @@ namespace model
                 nextPointID++;
             }
             
-            
             segments.emplace_back((Eigen::Matrix<int,2,1>()<<kID,k1ID).finished());
         }
         
@@ -80,6 +77,7 @@ namespace model
     /* init */,dislocationNetwork(defectiveCrystal.template getUniqueTypedMicrostructure<DislocationNetwork<3,0>>())
     /* init */,mainLayout(new QGridLayout(this))
     /* init */,glidePlanesGroup(new QGroupBox(tr("&Planes")))
+    /* init */,lut(vtkSmartPointer<vtkLookupTable>::New())
     /* init */,glidePlanesNoiseGroup(new QGroupBox(tr("&Noise")))
     /* init */,noiseMeshSizeLabel(new QLabel("mesh size",this))
     /* init */,noiseMeshSizeEdit(new QLineEdit("2.0"))
@@ -104,7 +102,9 @@ namespace model
     ///* init */,noiseLimits(Eigen::Array<double,2,2>::Zero())
     {
         
-        
+        lut->SetHueRange(0.66667, 0.0);
+        lut->Build();
+
         glidePlanesGroup->setCheckable(true);
         glidePlanesGroup->setChecked(false);
         glidePlaneActor->SetVisibility(false);
@@ -116,19 +116,14 @@ namespace model
         glidePlaneMeshGroup->setChecked(false);
         meshActor->SetVisibility(false);
         
-        
-        //    showGlidePlanesNoise->setChecked(false);
-        //    showGlidePlanesNoise->setText("show GlidePlanesNoise");
-        //    glidePlanesNoiseBox->setEnabled(false);
-        //    slipSystemNoiseBox->setEnabled(false);
-        
         for(const auto& pair : defectiveCrystal.ddBase.poly.grains)
         {
             grainNoiseBox->addItem(QString::fromStdString(std::to_string(pair.first)));
         }
         
-        glidePlanesNoiseBox->addItem("RSS");
-        glidePlanesNoiseBox->addItem("ISF energy");
+        glidePlanesNoiseBox->addItem("solidSolution_1");
+        glidePlanesNoiseBox->addItem("solidSolution_2");
+        glidePlanesNoiseBox->addItem("stackingFault");
         const auto& grain(defectiveCrystal.ddBase.poly.grains.begin()->second);
         for(size_t k=0; k<grain.singleCrystal->slipSystems().size();++k)
         {
@@ -148,14 +143,9 @@ namespace model
         noiseLayout->addWidget(sfNoiseMin,4,0,1,1);
         noiseLayout->addWidget(sfNoiseMax,4,1,1,1);
         
-        
         mainLayout->addWidget(glidePlanesGroup,0,0,1,1);
         mainLayout->addWidget(glidePlanesNoiseGroup,1,0,1,1);
         mainLayout->addWidget(glidePlaneMeshGroup,2,0,1,1);
-        
-        
-        
-        
         
         this->setLayout(mainLayout);
         connect(glidePlanesGroup,SIGNAL(toggled(bool)), this, SLOT(modify()));
@@ -163,13 +153,13 @@ namespace model
         connect(glidePlaneMeshGroup,SIGNAL(toggled(bool)), this, SLOT(modify()));
         
         connect(glidePlanesNoiseBox,SIGNAL(currentIndexChanged(int)), this, SLOT(modify()));
-        connect(slipSystemNoiseBox,SIGNAL(currentIndexChanged(int)), this, SLOT(modify()));
+        connect(slipSystemNoiseBox,SIGNAL(currentIndexChanged(int)), this, SLOT(computeGlidePlaneNoise()));
         connect(ssNoiseMin,SIGNAL(returnPressed()), this, SLOT(modify()));
         connect(ssNoiseMax,SIGNAL(returnPressed()), this, SLOT(modify()));
         connect(sfNoiseMin,SIGNAL(returnPressed()), this, SLOT(modify()));
         connect(sfNoiseMax,SIGNAL(returnPressed()), this, SLOT(modify()));
-        
-        
+        connect(noiseMeshSizeEdit,SIGNAL(returnPressed()), this, SLOT(computeGlidePlaneNoise()));
+
         // GlidePlane boundaries
         glidePlaneMapper->SetInputData(glidePlanePolydata);
         glidePlaneActor->SetMapper(glidePlaneMapper);
@@ -180,7 +170,6 @@ namespace model
         noisePolydata->Allocate();
         noiseMapper->SetInputData(noisePolydata);
         noiseActor->SetMapper ( noiseMapper );
-//        noiseMapper->SetScalarModeToUseCellData();
         noiseActor->GetProperty()->SetOpacity(0.8); //Make the mesh have some transparency.
         renderer->AddActor(noiseActor);
 
@@ -190,14 +179,8 @@ namespace model
         meshActor->SetMapper ( meshMapper );
         meshActor->GetProperty()->SetOpacity(0.8); //Make the mesh have some transparency.
         renderer->AddActor(meshActor);
-        
-        
-        //        renderer->AddActor(solidSolutionNoiseActorXZ);
-        
-        
     }
 
-    //void GlidePlaneActor::updateConfiguration(const DDconfigIO<3>& configIO)
     void GlidePlaneActor::updateConfiguration()
     {
         std::cout<<"Updating GlidePlanes..."<<std::flush;
@@ -205,7 +188,6 @@ namespace model
         computeMeshIntersections();
         computeGlidePlaneNoise();
         computeStackingFaults();
-//        modify();
         std::cout<<magentaColor<<" ["<<(std::chrono::duration<double>(std::chrono::system_clock::now()-t0)).count()<<" sec]"<<defaultColor<<std::endl;
     }
 
@@ -213,14 +195,23 @@ namespace model
     {
         if(dislocationNetwork && glidePlanesNoiseGroup->isChecked())
         {
+            noiseValues.clear();
+            for(int k=0;k<3;++k)
+            {
+                valuesMinMax[k]=std::make_pair(std::numeric_limits<double>::max(),-std::numeric_limits<double>::max());
+            }
             vtkSmartPointer<vtkPoints> meshPts(vtkSmartPointer<vtkPoints>::New());
             vtkSmartPointer<vtkCellArray> meshTriangles(vtkSmartPointer<vtkCellArray>::New());
             vtkSmartPointer<vtkUnsignedCharArray> meshColors(vtkSmartPointer<vtkUnsignedCharArray>::New());
             meshColors->SetNumberOfComponents(3);
             
             const size_t selectedGrainID(std::stoi(grainNoiseBox->currentText().toStdString()));
+            const auto& grain(defectiveCrystal.ddBase.poly.grain(selectedGrainID));
             const size_t selectedSlipSystemID(slipSystemNoiseBox->currentIndex());
+            const auto& slipSystem(grain.singleCrystal->slipSystems()[selectedSlipSystemID]);
+            const auto& planeNoise(slipSystem->planeNoise);
 
+  
             size_t nodeIDoffset(0);
             double meshSize;
             std::stringstream ssM(noiseMeshSizeEdit->text().toStdString());
@@ -228,189 +219,64 @@ namespace model
             {
                 noiseMeshSizeEdit->setStyleSheet("background-color: white");
                 
-                for(const auto& weakGlidePlane : dislocationNetwork->ddBase.glidePlaneFactory.glidePlanes())
+                if(planeNoise)
                 {
-                    if(!weakGlidePlane.second.expired())
+                    for(const auto& weakGlidePlane : dislocationNetwork->ddBase.glidePlaneFactory.glidePlanes())
                     {
-                        const auto glidePlane(weakGlidePlane.second.lock());
-                        const auto& grain(glidePlane->grain);
-                        const auto& slipSystem(grain.singleCrystal->slipSystems()[selectedSlipSystemID]);
-                        const auto glidePlaneSlipSystems(glidePlane->slipSystems());
-                                                
-                        if(grain.grainID==selectedGrainID && glidePlaneSlipSystems.find(slipSystem)!=glidePlaneSlipSystems.end())
+                        if(!weakGlidePlane.second.expired())
                         {
-                            std::deque<Eigen::Matrix<double,2,1>> boundaryPts;
-                            std::deque<Eigen::Matrix<double,2,1>> internalPts;
-                            for(const auto& bndLine : glidePlane->meshIntersections)
+                            const auto glidePlane(weakGlidePlane.second.lock());
+                            const auto glidePlaneSlipSystems(glidePlane->slipSystems());
+                                                    
+                            if(glidePlane->grain.grainID==selectedGrainID && glidePlaneSlipSystems.find(slipSystem)!=glidePlaneSlipSystems.end())
                             {
-                                boundaryPts.push_back(glidePlane->localPosition(bndLine->P0));
-                            }
-                            TriangularMesh triMesh;
-                            triMesh.reMesh(boundaryPts,internalPts,meshSize,"pazq");
-                            
-                            for(const auto& point2d : triMesh.vertices())
-                            {
-                                const auto point3d(glidePlane->globalPosition(point2d));
-                                meshPts->InsertNextPoint(point3d(0),point3d(1),point3d(2));
-            //                                const ElementType* ele(nullptr);
-            //                                if(defectiveCrystal.ddBase.fe)
-            //                                {
-            //                                    const auto searchPair(defectiveCrystal.ddBase.mesh.search(point3d));
-            //                                    if(searchPair.first)
-            //                                    {
-            //                                        ele=&defectiveCrystal.ddBase.fe->elements().at(searchPair.second->xID);
-            //                                    }
-            //                                }
-            //                                dataPnts().emplace_back(defectiveCrystal,point3d,ele);
+                                std::deque<Eigen::Matrix<double,2,1>> boundaryPts;
+                                std::deque<Eigen::Matrix<double,2,1>> internalPts;
+                                for(const auto& bndLine : glidePlane->meshIntersections)
+                                {
+                                    boundaryPts.push_back(glidePlane->localPosition(bndLine->P0));
+                                }
+                                TriangularMesh triMesh;
+                                triMesh.reMesh(boundaryPts,internalPts,meshSize,"pazq");
                                 
-            //                                vtkSmartPointer<vtkUnsignedCharArray> fieldColors(vtkSmartPointer<vtkUnsignedCharArray>::New());
-            //                                fieldColors->SetNumberOfComponents(3);
-            //                                for(auto& vtx : dataPnts())
-            //                                {
-            //                                    const double value(vtx.value(valID,microstructuresCheck));
-            //                                    double dclr[3];
-            //                                    lut->GetColor(value, dclr);
-            //                                    unsigned char cclr[3];
-            //                                    for(unsigned int j = 0; j < 3; j++)
-            //                                    {
-            //                                        cclr[j] = static_cast<unsigned char>(255.0 * dclr[j]);
-            //                                    }
-            //                                    fieldColors->InsertNextTypedTuple(cclr);
-            //                                }
-            //                                meshPolydata->GetPointData()->SetScalars(fieldColors);
-            //                                meshPolydata->Modified();
-            //                                meshMapper->SetScalarModeToUsePointData();
+                                for(const auto& point2d : triMesh.vertices())
+                                {
+                                    const auto point3d(glidePlane->globalPosition(point2d));
+                                    meshPts->InsertNextPoint(point3d(0),point3d(1),point3d(2));
+                                    noiseValues.push_back(planeNoise->gridInterp(point2d));
+                                    
+                                    valuesMinMax[0]=std::make_pair(std::min(valuesMinMax[0].first,std::get<0>(noiseValues.back())),std::max(valuesMinMax[0].second,std::get<0>(noiseValues.back())));
+                                    valuesMinMax[1]=std::make_pair(std::min(valuesMinMax[1].first,std::get<1>(noiseValues.back())),std::max(valuesMinMax[1].second,std::get<1>(noiseValues.back())));
+                                    valuesMinMax[2]=std::make_pair(std::min(valuesMinMax[2].first,std::get<2>(noiseValues.back())),std::max(valuesMinMax[2].second,std::get<2>(noiseValues.back())));
+                                }
                                 
+                                for(const auto& tri : triMesh.triangles())
+                                {
+                                    vtkSmartPointer<vtkTriangle> triangle = vtkSmartPointer<vtkTriangle>::New();
+                                    triangle->GetPointIds()->SetId (0,tri(0)+nodeIDoffset);
+                                    triangle->GetPointIds()->SetId (1,tri(1)+nodeIDoffset);
+                                    triangle->GetPointIds()->SetId (2,tri(2)+nodeIDoffset);
+                                    meshTriangles->InsertNextCell ( triangle );
+                                    const auto triColor(Eigen::Matrix<int,1,3>::Random()*255);
+                                    meshColors->InsertNextTuple3(triColor(0),triColor(1),triColor(2)); // use this to assig color to each vertex
+                                }
+                                nodeIDoffset += triMesh.vertices().size();
                             }
-                            
-                            for(const auto& tri : triMesh.triangles())
-                            {
-                                vtkSmartPointer<vtkTriangle> triangle = vtkSmartPointer<vtkTriangle>::New();
-                                triangle->GetPointIds()->SetId (0,tri(0)+nodeIDoffset);
-                                triangle->GetPointIds()->SetId (1,tri(1)+nodeIDoffset);
-                                triangle->GetPointIds()->SetId (2,tri(2)+nodeIDoffset);
-                                meshTriangles->InsertNextCell ( triangle );
-                                const auto triColor(Eigen::Matrix<int,1,3>::Random()*255);
-                                meshColors->InsertNextTuple3(triColor(0),triColor(1),triColor(2)); // use this to assig color to each vertex
-                            }
-                            nodeIDoffset += triMesh.vertices().size();
-                            
-                            
-                            //                        for(size_t slipSystemID=0; slipSystemID<grain.singleCrystal->slipSystems().size();++slipSystemID)
-                            //                        {
-                            //                            //                const auto& slipSystem(configFields.ddBase.poly.grain(loopIO.grainID).singleCrystal->slipSystems()[slipSystemID]);
-                            //                            const auto& slipSystem(grain.singleCrystal->slipSystems()[slipSystemID]);
-                            //                            if(slipSystem->planeNoise)
-                            //                            {
-                            ////                                if(slipSystem->planeNoise->solidSolutionNoise().size() || slipSystem->planeNoise->stackingFaultNoise().size())
-                            ////                                {
-                            //                                    if(glidePlane->n.cross(slipSystem->n).squaredNorm()==0)
-                            //                                    {// glide plane includes slip system
-                            ////
-                            ////                                        std::set<double> xPos;
-                            ////                                        std::set<double> yPos;
-                            ////                                        for(const auto& meshInt : glidePlane->meshIntersections)
-                            ////                                        {
-                            ////                                            const auto localPos(slipSystem->globalToLocal(meshInt->P0-glidePlane->P));
-                            ////                                            xPos.insert(localPos(0));
-                            ////                                            yPos.insert(localPos(1));
-                            ////                                        }
-                            ////
-                            ////                                        const Eigen::Array<double,2,1> lCorner(*xPos. begin(),*yPos. begin());
-                            ////                                        const Eigen::Array<double,2,1> hCorner(*xPos.rbegin(),*yPos.rbegin());
-                            ////
-                            ////                                        const Eigen::Array<int,2,1> lIdx(slipSystem->planeNoise->posToIdx(lCorner).first);
-                            ////                                        const Eigen::Array<int,2,1> hIdx(slipSystem->planeNoise->posToIdx(hCorner).second);
-                            ////
-                            ////                                        const int Nx(hIdx(0)-lIdx(0)+1);
-                            ////                                        const int Ny(hIdx(1)-lIdx(1)+1);
-                            ////
-                            ////                                        vtkNew<vtkPoints> glidePlaneNoisePoints;
-                            ////                                        glidePlaneNoisePoints->SetNumberOfPoints(Nx*Ny);
-                            ////
-                            ////                                        vtkNew<vtkDoubleArray> glidePlaneSSNoise;
-                            ////                                        glidePlaneSSNoise->SetNumberOfValues(Nx*Ny);
-                            ////
-                            ////                                        vtkNew<vtkDoubleArray> glidePlaneSFNoise;
-                            ////                                        glidePlaneSFNoise->SetNumberOfValues(Nx*Ny);
-                            ////
-                            ////                                        for(int i=0;i<Nx;++i)
-                            ////                                        {
-                            ////                                            const int gridi(i+lIdx(0));
-                            ////
-                            ////                                            for(int j=0;j<Ny;++j)
-                            ////                                            {
-                            ////                                                const int gridj(j+lIdx(1));
-                            ////                                                //                                        const int storageIdx = Ny*i + j;
-                            ////                                                const int storageIdx = Nx*j + i;
-                            ////
-                            ////                                                const Eigen::Array<int,2,1> idx(gridi,gridj);
-                            ////                                                const Eigen::Array<double,2,1> localPos(slipSystem->planeNoise->idxToPos(idx));
-                            ////
-                            ////                                                const Eigen::Array<double,3,1> globalPos(slipSystem->localToGlobal(localPos.matrix())+glidePlane->P);
-                            ////                                                glidePlaneNoisePoints->SetPoint(storageIdx,globalPos.data());
-                            ////
-                            ////                                                const auto noiseVal(slipSystem->gridVal(idx));
-                            ////                                                glidePlaneSSNoise->SetValue(storageIdx,std::get<1>(noiseVal));
-                            ////                                                glidePlaneSFNoise->SetValue(storageIdx,std::get<2>(noiseVal));
-                            ////                                                noiseLimits<<std::min(noiseLimits(0,0),std::get<1>(noiseVal)),std::max(noiseLimits(0,1),std::get<1>(noiseVal)),
-                            ////                                                /*         */std::min(noiseLimits(1,0),std::get<2>(noiseVal)),std::max(noiseLimits(1,1),std::get<2>(noiseVal));
-                            ////
-                            ////                                            }
-                            ////                                        }
-                            ////
-                            ////
-                            ////                                        ssNoiseMin->setText(QString::number(noiseLimits(0,0)));
-                            ////                                        ssNoiseMax->setText(QString::number(noiseLimits(0,1)));
-                            ////                                        sfNoiseMin->setText(QString::number(noiseLimits(1,0)));
-                            ////                                        sfNoiseMax->setText(QString::number(noiseLimits(1,1)));
-                            ////
-                            ////
-                            ////                                        vtkNew<vtkStructuredGrid> glidePlaneNoiseGrid;
-                            ////
-                            ////                                        glidePlaneNoiseGrid->SetDimensions(Nx,Ny,1);
-                            ////                                        glidePlaneNoiseGrid->SetPoints(glidePlaneNoisePoints);
-                            ////                                        glidePlaneNoiseGrid->GetPointData()->AddArray(glidePlaneSSNoise);
-                            ////                                        glidePlaneNoiseGrid->GetPointData()->AddArray(glidePlaneSFNoise);
-                            ////
-                            ////
-                            ////                                        vtkNew<vtkTableBasedClipDataSet> clipper;
-                            ////                                        clipper->SetInputData(glidePlaneNoiseGrid);
-                            ////                                        clipper->SetClipFunction(clipPlanes);
-                            ////                                        clipper->InsideOutOn();
-                            ////
-                            ////                                        noiseMappers[slipSystemID].push_back(vtkSmartPointer<vtkDataSetMapper>::New());
-                            ////                                        noiseMappers[slipSystemID].back()->SetInputConnection(clipper->GetOutputPort());
-                            ////                                        noiseMappers[slipSystemID].back()->SetScalarModeToUsePointFieldData();
-                            ////                                        noiseMappers[slipSystemID].back()->SelectColorArray(glidePlanesNoiseBox->currentIndex());
-                            ////                                        noiseMappers[slipSystemID].back()->SetScalarRange(noiseLimits(glidePlanesNoiseBox->currentIndex(),0), noiseLimits(glidePlanesNoiseBox->currentIndex(),1));
-                            ////                                        noiseMappers[slipSystemID].back()->ScalarVisibilityOn();
-                            ////                                        noiseActors[slipSystemID].push_back(vtkSmartPointer<vtkActor>::New());
-                            ////                                        noiseActors[slipSystemID].back()->SetMapper(noiseMappers[slipSystemID].back());
-                            ////                                        noiseActors[slipSystemID].back()->SetVisibility(glidePlanesNoiseGroup->isChecked() && slipSystemNoiseBox->currentIndex()==int(slipSystemID));
-                            ////                                        renderer->AddActor( noiseActors[slipSystemID].back());
-                            ////                                    }
-                            //                                }
-                            //                            }
-                            //                        }
                         }
                     }
                 }
-
             }
             else
             {
                 noiseMeshSizeEdit->setStyleSheet("background-color: red");
             }
             
-
-            
             noisePolydata->SetPoints ( meshPts );
             noisePolydata->SetPolys ( meshTriangles );
             noisePolydata->GetCellData()->SetScalars(meshColors);
             noiseMapper->SetScalarModeToUseCellData();
             noisePolydata->Modified();
-
+            modify();
         }
     }
 
@@ -452,7 +318,6 @@ void GlidePlaneActor::computeStackingFaults()
         vtkSmartPointer<vtkUnsignedCharArray> meshColors(vtkSmartPointer<vtkUnsignedCharArray>::New());
         meshColors->SetNumberOfComponents(3);
         
-        //    std::cout<<"singleGlidePlaneMap.size() ="<<singleGlidePlaneMap.size()<<std::endl;
         size_t numVertices(0);
         for(auto& pair : singleGlidePlaneMap)
         {
@@ -521,33 +386,6 @@ void GlidePlaneActor::computeStackingFaults()
                             glidePlaneCells->InsertNextCell(line);
                             pointIDs+=2;
                         }
-                        
-                        //                        for(const auto& siIO : configFields.configIO.sphericalInclusions())
-                        //                        {
-                        //                            const Eigen::Matrix<double,3,1> planeC(glidePlane->snapToPlane(siIO.C));
-                        //                            const Eigen::Matrix<double,3,1> dC(planeC-siIO.C);
-                        //                            const double R2(std::pow(siIO.a,2));
-                        //                            const double dC2(dC.squaredNorm());
-                        //                            if(dC2<R2)
-                        //                            {// Plane intersects inclusion
-                        //                                const double r(std::sqrt(R2-dC2));
-                        //                                const int NP(50);
-                        //                                const double dTheta(2.0*std::numbers::pi/NP);
-                        //                                for(int k=0;k<NP;++k)
-                        //                                {
-                        //                                    const Eigen::Matrix<double,3,1> circPoint0(glidePlane->globalPosition((Eigen::Matrix<double,2,1>()<<r*std::cos(    k*dTheta),r*std::sin(    k*dTheta)).finished())-glidePlane->P+planeC);
-                        //                                    const Eigen::Matrix<double,3,1> circPoint1(glidePlane->globalPosition((Eigen::Matrix<double,2,1>()<<r*std::cos((k+1)*dTheta),r*std::sin((k+1)*dTheta)).finished())-glidePlane->P+planeC);
-                        //
-                        //                                    glidePlanePoints->InsertNextPoint(circPoint0.data());
-                        //                                    glidePlanePoints->InsertNextPoint(circPoint1.data());
-                        //                                    vtkSmartPointer<vtkLine> line(vtkSmartPointer<vtkLine>::New());
-                        //                                    line->GetPointIds()->SetId(0, pointIDs); // the second 0 is the index of the Origin in linesPolyData's points
-                        //                                    line->GetPointIds()->SetId(1, pointIDs+1);
-                        //                                    glidePlaneCells->InsertNextCell(line);
-                        //                                    pointIDs+=2;
-                        //                                }
-                        //                            }
-                        //                        }
                     }
                 }
             }
@@ -561,46 +399,47 @@ void GlidePlaneActor::computeStackingFaults()
     {
         glidePlaneActor->SetVisibility(glidePlanesGroup->isChecked());
         meshActor->SetVisibility(glidePlaneMeshGroup->isChecked());
+        noiseActor->SetVisibility(glidePlanesNoiseGroup->isChecked());
         
+        if(glidePlanesNoiseGroup->isChecked())
+        {
+            vtkSmartPointer<vtkUnsignedCharArray> noiseColors(vtkSmartPointer<vtkUnsignedCharArray>::New());
+            noiseColors->SetNumberOfComponents(3);
+            double val(0.0);
+            double dclr[3];
+            unsigned char cclr[3];
+            lut->SetTableRange(valuesMinMax[glidePlanesNoiseBox->currentIndex()].first, valuesMinMax[glidePlanesNoiseBox->currentIndex()].second);
+            
+            for(const auto& tup : noiseValues)
+            {
+                switch (glidePlanesNoiseBox->currentIndex())
+                {
+                    case 0:
+                        val=std::get<0>(tup);
+                        break;
+                    case 1:
+                        val=std::get<1>(tup);
+                        break;
+                    case 2:
+                        val=std::get<2>(tup);
+                        break;
+                    default:
+                        break;
+                }
+
+                lut->GetColor(val, dclr);
+                for(unsigned int j = 0; j < 3; j++)
+                {
+                    cclr[j] = static_cast<unsigned char>(255.0 * dclr[j]);
+                }
+                noiseColors->InsertNextTypedTuple(cclr);
+            }
+            
+            noisePolydata->GetPointData()->SetScalars(noiseColors);
+            noisePolydata->Modified();
+            noiseMapper->SetScalarModeToUsePointData();
+        }
         
-        //    glidePlanesNoiseBox->setEnabled(glidePlanesNoiseGroup->isChecked());
-        //    slipSystemNoiseBox->setEnabled(glidePlanesNoiseGroup->isChecked());
-        
-        // Select solidSolution or stacking-fault noise
-        //    for(const auto& mapperPair : noiseMappers)
-        //    {
-        //        for(const auto& mapper : mapperPair.second)
-        //        {
-        //            mapper->SelectColorArray(glidePlanesNoiseBox->currentIndex());
-        //
-        //            switch (glidePlanesNoiseBox->currentIndex())
-        //            {
-        //                case 0:
-        //                    mapper->SetScalarRange(ssNoiseMin->text().toDouble(), ssNoiseMax->text().toDouble());
-        //                    break;
-        //
-        //                case 1:
-        //                    mapper->SetScalarRange(sfNoiseMin->text().toDouble(), sfNoiseMax->text().toDouble());
-        //                    break;
-        //
-        //                default:
-        //                    break;
-        //            }
-        //        }
-        //    }
-        
-        //    const size_t slipSystemID(slipSystemNoiseBox->currentIndex());
-        
-        //    CONTINUE HERE
-        
-        
-        //    for(const auto& actorPair : noiseActors)
-        //    {
-        //        for(const auto& actor : actorPair.second)
-        //        {
-        //            actor->SetVisibility(actorPair.first==slipSystemID && glidePlanesNoiseGroup->isChecked());
-        //        }
-        //    }
         renderWindow->Render();
     }
 

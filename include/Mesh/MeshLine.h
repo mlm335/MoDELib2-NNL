@@ -21,6 +21,8 @@
 #include <PlanePlaneIntersection.h>
 #include <MeshBoundarySegment.h>
 #include <LineLineIntersection.h>
+#include <Line.h>
+
 //#include <EmbeddedPolygonTriangulation.h>
 
 namespace model
@@ -38,23 +40,13 @@ namespace model
                                                            const VectorDim& p,
                                                            const VectorDim& d);
         
-//        const std::pair<int,int> regionIDs;
-//        const BoundingMeshSegments<dim> meshIntersections;
-
         MeshLine(const SimplicialMesh<dim>& mesh,
                   const VectorDim& p,
                   const VectorDim& d);
+        
+        MeshLine(const SimplicialMesh<dim>& mesh,
+                  const Line<dim>& line);
     };
-    
-//    template <int dim,class T>
-//    T& operator << (T& os, const MeshPlane<dim>& gp)
-//    {
-//        for (const auto& x : gp.meshIntersections)
-//        {
-//            os<<gp.sID<<" "<<*x;
-//        }
-//        return os;
-//    }
-    
+
 }
 #endif

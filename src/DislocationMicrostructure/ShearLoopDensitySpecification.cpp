@@ -18,6 +18,8 @@ namespace model
     /* init */,numberOfSides(0)
     /* init */,radiusDistributionMean(0.0)
     /* init */,radiusDistributionStd(0.0)
+    /* init */,allowedGrainIDs({-1})
+    /* init */,allowedSlipSystemIDs({-1})
     {
         
     }
@@ -28,6 +30,8 @@ namespace model
     /* init */,numberOfSides(targetDensity>0.0? this->parser->readScalar<int>("numberOfSides",true) : 0)
     /* init */,radiusDistributionMean(targetDensity>0.0? this->parser->readScalar<double>("radiusDistributionMean",true) : 0.0)
     /* init */,radiusDistributionStd(targetDensity>0.0? this->parser->readScalar<double>("radiusDistributionStd",true) : 0.0)
+    /* init */,allowedGrainIDs(this->parser->readArray<int>("allowedGrainIDs",true))
+    /* init */,allowedSlipSystemIDs(this->parser->readArray<int>("allowedSlipSystemIDs",true))
     {
         
     }

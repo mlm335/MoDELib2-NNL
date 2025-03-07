@@ -226,7 +226,7 @@ namespace model
                 //assert(this->loop()->glidePlane->contains(this->get_P()));
                 const auto oldPatch(_periodicPlanePatch);
                 const auto pLocalNew(this->loop()->periodicGlidePlane->referencePlane->localPosition(this->get_P()));
-                _periodicPlanePatch=this->loop()->periodicGlidePlane->getPatch(this->loop()->periodicGlidePlane->findPatch(pLocalNew,oldPatch->shift));
+                _periodicPlanePatch=this->loop()->periodicGlidePlane->getPatch(this->loop()->periodicGlidePlane->findPatch(pLocalNew,oldPatch->shift).first);
                 VerboseDislocationLoopNode(4,"old patch= "<<oldPatch->shift.transpose()<<std::endl;);
                 VerboseDislocationLoopNode(4,"new patch= "<<_periodicPlanePatch->shift.transpose()<<std::endl;);
                 // if(oldPatch!=_periodicPlanePatch)

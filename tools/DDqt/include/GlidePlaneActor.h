@@ -77,7 +77,8 @@ namespace model
         Q_OBJECT
         private slots:
         void modify();
-        
+        void computeGlidePlaneNoise();
+
     private:
         vtkGenericOpenGLRenderWindow* const renderWindow;
         vtkRenderer* const renderer;
@@ -87,6 +88,7 @@ namespace model
         QGroupBox* glidePlanesGroup;
         
         vtkSmartPointer<vtkLookupTable> lut;
+        std::array<std::pair<double,double>,3> valuesMinMax;
         QGroupBox* glidePlanesNoiseGroup;
         QLabel* noiseMeshSizeLabel;
         QLineEdit* noiseMeshSizeEdit;
@@ -102,6 +104,7 @@ namespace model
 //        vtkSmartPointer<vtkPoints> noisePts;
 //        vtkSmartPointer<vtkCellArray> noiseTriangles;
 //        vtkSmartPointer<vtkUnsignedCharArray> noiseColors;
+        std::deque<std::tuple<double,double,double>> noiseValues;
         vtkSmartPointer<vtkPolyData> noisePolydata;
         vtkSmartPointer<vtkDataSetMapper> noiseMapper;
         vtkSmartPointer<vtkActor> noiseActor;
@@ -126,7 +129,6 @@ namespace model
         GlidePlaneActor(vtkGenericOpenGLRenderWindow* const,vtkRenderer* const,DefectiveCrystal<3>& defectiveCrystal_in);
         void updateConfiguration();
         void computeMeshIntersections();
-        void computeGlidePlaneNoise();
         void computeStackingFaults();
 
     };

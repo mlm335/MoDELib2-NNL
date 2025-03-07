@@ -22,6 +22,8 @@ struct PrismaticLoopDensitySpecification : public MicrostructureSpecificationBas
     double targetDensity;
     double radiusDistributionMean;
     double radiusDistributionStd;
+    std::vector<int> allowedGrainIDs;
+    std::vector<int> allowedSlipSystemIDs;
 
     PrismaticLoopDensitySpecification();
     PrismaticLoopDensitySpecification(const std::string& fileName);
