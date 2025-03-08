@@ -53,7 +53,6 @@ ShearLoopGenerator::ShearLoopGenerator(const ShearLoopDensitySpecification& spec
             if(allowAllGrains || allowedGrainIDsSet.find(grainID)!=allowedGrainIDsSet.end())
             {
                 std::uniform_int_distribution<> ssDist(0,mg.ddBase.poly.grain(grainID).singleCrystal->slipSystems().size()-1);
-//                const int rSS(ssDist(generator)); // a random SlipSystem
                 const int allowedIndex(allowedSlipSystemDist(generator));
                 const int allowedSlipID(spec.allowedSlipSystemIDs[allowedIndex]);
                 const int rSS(allowedSlipID<0 ? ssDist(generator) : allowedSlipID); // a random SlipSystem

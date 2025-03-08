@@ -608,14 +608,12 @@ void DDPlaneField::resetPlane()
         if(ssP >> P(0) && ssP >> P(1) && ssP >> P(2))
         {
             posEdit->setStyleSheet("background-color: white");
-//            std::cout<<"P="<<P.transpose()<<std::endl;
             
             VectorDim N;
             std::stringstream ssN(normalEdit->text().toStdString());
             if(ssN >> N(0) && ssN >> N(1) && ssN >> N(2))
             {
                 normalEdit->setStyleSheet("background-color: white");
-//                std::cout<<"N="<<N.transpose()<<std::endl;
                 const double nNorm(N.norm());
                 if(nNorm>FLT_EPSILON)
                 {

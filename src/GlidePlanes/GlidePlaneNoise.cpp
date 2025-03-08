@@ -30,7 +30,7 @@ namespace model
                 const int seed(parser.readScalar<int>("seed",true));
                 const Eigen::Matrix<int,1,3> gridSize(parser.readMatrix<int,1,3>("gridSize",true));
                 const Eigen::Matrix<double,1,3> gridSpacing(parser.readMatrix<double,1,3>("gridSpacing_SI",true)/mat.b_SI);
-
+                
                 if(type=="AnalyticalSolidSolutionNoise")
                 {
                     const double a(parser.readScalar<double>("spreadLstress_SI",true)/mat.b_SI);      // spreading length for stresses [AA]
@@ -44,37 +44,55 @@ namespace model
                 }
                 if(type=="MDSolidSolutionNoise")
                 {
-
+                    //                    const double a(parser.readScalar<double>("spreadLstress_SI",true)/mat.b_SI);      // spreading length for stresses [AA]
+                    const double a_Cai(parser.readScalar<double>("a_cai_SI",true)/mat.b_SI);
+                    //                    const double MSSS(parser.readScalar<double>("MSSS_SI",true)/std::pow(mat.mu_SI,2));
+                    // const std::string fileName_vtk_xz(std::filesystem::path(mat.materialFile).parent_path().string()+"/"+TextFileParser::removeSpaces(parser.readString("fileName_vtk_xz",true)));
+                    // const std::string fileName_vtk_yz(std::filesystem::path(mat.materialFile).parent_path().string()+"/"+TextFileParser::removeSpaces(parser.readString("fileName_vtk_yz",true)));
+                    
+                    const std::string correlationFile_L(parser.readString("correlationFile_L",true));
+                    const std::string correlationFile_T(parser.readString("correlationFile_T",true));
+                    
+                    // std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
+                    //std::filesystem::current_path(std::filesystem::path(noiseFileName).parent_path());
+                    // std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
+                    
+                    const auto success(solidSolutionNoise().emplace(tag,new MDSolidSolutionNoise(mat,tag,correlationFile_L,correlationFile_T,seed,gridSize,gridSpacing,a_Cai)));
+                    // std::cout<<"MDSolidSolutionNoise inserted"<<std::endl;
+                    if(!success.second)
+                    {
+                        throw std::runtime_error("Could not insert noise "+tag);
+                    }
                 }
                 if(type=="MDStackingFaultNoise")
                 {
-
+                    
                 }
                 if(type=="MDShortRangeOrderNoise")
                 {
-
+                    
                 }
             }
             
-            for(auto& pair : solidSolutionNoise())
-            {
-                pair.second->computeRealNoise();
-                pair.second->computeRealNoiseStatistics(mat);
-            }
             
-            for(auto& pair : stackingFaultNoise())
-            {
-                pair.second->computeRealNoise();
-                pair.second->computeRealNoiseStatistics(mat);
-            }
-            }
-            
-
+        }
+        for(auto& pair : solidSolutionNoise())
+        {
+            pair.second->computeRealNoise();
+            pair.second->computeRealNoiseStatistics(mat);
+        }
+        
+        for(auto& pair : stackingFaultNoise())
+        {
+            pair.second->computeRealNoise();
+            pair.second->computeRealNoiseStatistics(mat);
+        }
+        
     }
 
     std::tuple<double,double,double> GlidePlaneNoise::gridInterp(const Eigen::Matrix<double,2,1>& localPos) const
     {   // Added by Hyunsoo (hyunsol@g.clemson.edu)
-                
+        
         double effsolNoiseXZ(0.0);
         double effsolNoiseYZ(0.0);
         for(const auto& noise : solidSolutionNoise())

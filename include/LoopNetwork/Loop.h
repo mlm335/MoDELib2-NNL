@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <StaticID.h>
 #include <CRTP.h>
-//#include <LoopObserver.h>
 #include <NetworkBase.h>
 
 #ifndef NDEBUG
@@ -58,116 +57,40 @@ namespace model
         static int verboseLevel;
 
 
-        /**********************************************************************/
+        
         Loop(LoopNetworkType* const loopNetwork_in,
              const FlowType& f) :
         /* init */ NetworkBaseType(loopNetwork_in,&loopNetwork_in->loops(),this->sID)
         /* init */,_flow(f)
-//        /* init */ loopNetwork(*_loopNetwork)
         {
             VerboseLoop(1,"Creating Loop "<<tag()<<std::endl);
-
-//            std::cout<<"Constructing Loop "<<this->sID<<std::endl;
-//            _loopNetwork->addLoop(this->p_derived());
-//            LoopObserverType::addLoop(this->p_derived());
         }
         
-//        Loop(const Loop<Derived>& other) =delete;
-        
-//        Loop& operator=(const Loop<Derived>& other) =delete;
-        
-//        /**********************************************************************/
-//        Loop(const Loop<Derived>& other) :
-//        /* init */ StaticID<Derived>()
-//        /* init */,LoopLinkContainerType()
-//        /* init */,_loopNetwork(other._loopNetwork)
-//        /* init */,_flow(other._flow)
-////        /* init */ loopNetwork(*_loopNetwork)
-////        /* init */ loopNetwork(*_loopNetwork)
-//        {
-////            std::cout<<"Copying Loop: "<<this->sID<<std::endl;
-//
-////            std::cout<<"Constructing Loop "<<this->sID<<std::endl;
-//            _loopNetwork->addLoop(this->p_derived());
-//            //            LoopObserverType::addLoop(this->p_derived());
-//        }
-        
-//        SOME CONSTRUCTOR HERE IS NOT DOING addLoop
-        
-        /**********************************************************************/
         ~Loop()
         {
             VerboseLoop(1,"Destroying Loop "<<tag()<<std::endl);
-//if(loopLinks().size()!=0)
-//{
-//    throw std::runtime_error("Loop "+tag()+" not empty.");
-//}
-            
-//            assert(loopLinks().size()==0 && "DESTROYING NON-EMPTY LOOP.");
-            
-//            _loopNetwork->removeLoop(this->p_derived());
-//            LoopObserverType::removeLoop(this->p_derived());
         }
-        
-
         
         void update()
         {
             
         }
         
-//        /**********************************************************************/
-//        const LoopNetworkType& network() const
-//        {
-//            return *_loopNetwork;
-//        }
-//
-//        LoopNetworkType& network()
-//        {
-//            return *_loopNetwork;
-//        }
-        
-//        /**********************************************************************/
-//        std::shared_ptr<Derived> clone() const
-//        {/* Returns a copy of this loop. The new loop, however, does not contain
-//          * any LoopLink.
-//          */
-//            std::shared_ptr<Derived> temp(new Derived(this->derived()));
-//            assert(temp->links().empty());
-////            temp->links().clear();
-//            
-//            return temp;
-//        }
-        
-//        /**********************************************************************/
-//        void flip()
-//        {
-//            _flow*=-1;
-//            for(auto link : links())
-//            {
-//                link.second->flip();
-//            }
-//        }
-        
-        /**********************************************************************/
         const FlowType& flow() const
         {
             return _flow;
         }
         
-        /**********************************************************************/
         LoopLinkContainerType& loopLinks()
         {
             return *this;
         }
         
-        /**********************************************************************/
         const LoopLinkContainerType& loopLinks() const
         {
             return *this;
         }
         
-        /**********************************************************************/
         void addLoopLink(LoopLinkType* const pL)
         {
             VerboseLoop(2,"Loop "<<tag()<<" addLoopLink "<<pL->tag()<<std::endl);
@@ -177,10 +100,8 @@ namespace model
                 std::cout<<"DislocationLoop "<<this->sID<<" cannot add LoopLink "<<pL->tag()<<std::endl;
                 exit(EXIT_FAILURE);
             }
-//            assert(success && "Could not insert in linkMap");
         }
         
-        /**********************************************************************/
         void removeLoopLink(LoopLinkType* const pL)
         {
             VerboseLoop(2,"Loop "<<tag()<<" removeLoopLink "<<pL->tag()<<std::endl);
@@ -189,37 +110,7 @@ namespace model
             {
                 throw std::runtime_error("Cannot remove link "+pL->tag()+" from loop "+tag());
             }
-//            assert(erased==1 && "Could not erase from linkMap");
         }
-
-        
-        /**********************************************************************/
-        //Giacomo Version
-        
-        // LoopLinkSequenceType linkSequence() const
-        // {
-        //     //RECODE THIS USING prev/next
-        //     //typename LoopLinkContainerType::const_iterator iter;
-        //     VerboseLoop(3,"Loop "<<tag()<<" loopLinks().size()= "<<loopLinks().size()<<std::endl);
-        //     LoopLinkSequenceType temp;
-        //     if(loopLinks().size())
-        //     {
-        //         const LoopLinkType* pL=*loopLinks().begin();
-        //         for(size_t k=0;k<loopLinks().size();++k)
-        //         {
-        //             if(pL)
-        //             {
-        //                 if(pL->next)
-        //                 {
-        //                     temp.push_back(pL);
-        //                     pL=pL->next;
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     VerboseLoop(3,"Loop "<<tag()<<" linkSequence.size()= "<<temp.size()<<std::endl);
-        //     return temp;
-        // }
         
         LoopLinkSequenceType linkSequence() const
         {
@@ -252,7 +143,6 @@ namespace model
             return temp;
         }
         
-        /**********************************************************************/
         LoopNodeSequenceType nodeSequence() const
         {
             LoopNodeSequenceType temp;
@@ -263,7 +153,6 @@ namespace model
             return temp;
         }
         
-        /**********************************************************************/
         std::deque<size_t> nodeIDSequence() const
         {
             std::deque<size_t> temp;
@@ -274,23 +163,6 @@ namespace model
             return temp;
         }
         
-//        /**********************************************************************/
-//        std::pair<bool,LoopLinkType*> linkStartingAt(const size_t& i) const
-//        {
-//
-//            std::pair<bool,LoopLinkType*> temp=std::make_pair(false,static_cast<LoopLinkType*>(nullptr));
-//            for(const auto& link : links())
-//            {
-//                if(link->source()->sID==i)
-//                {
-//                    temp=std::make_pair(true,link.second);
-//                    break;
-//                }
-//            }
-//            return temp;
-//        }
-        
-        /**********************************************************************/
         std::pair<bool,LoopLinkType*> linkStartingAt(const std::shared_ptr<LoopNodeType>& Ni) const
         {
             
@@ -306,9 +178,6 @@ namespace model
             return temp;
         }
 
-        
-        
-        /**********************************************************************/
         bool isLoop() const
         {
             const LoopLinkSequenceType linkSeq(linkSequence());
@@ -330,7 +199,6 @@ namespace model
             return temp;
         }
 
-//        /**********************************************************************/
         bool isIsolated() const
         {
             for(const auto& link : loopLinks())
@@ -346,14 +214,12 @@ namespace model
             return true;
         }
         
-        /**********************************************************************/
         std::string tag() const
         {/*!\returns the string "i->j" where i is source()->sID and j=sink()->sID
           */
             return std::to_string(this->sID);
         }
         
-        /**********************************************************************/
         void printLoop() const
         {
             std::cout<<"Loop "<<this->sID<<std::endl;
@@ -371,6 +237,5 @@ namespace model
     template<typename Derived>
     int Loop<Derived>::verboseLevel=0;
 
-    
 }
 #endif

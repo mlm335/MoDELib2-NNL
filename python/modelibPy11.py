@@ -17,6 +17,8 @@ spec.targetDensity=5.0e12
 spec.radiusDistributionMean=1.0e-07
 spec.radiusDistributionStd=0.0e-8
 spec.numberOfSides=20
+spec.allowedGrainIDs=np.array([-1]); # set of grain IDs where loops are allowed. Use -1 for all grains
+allowedSlipSystemIDs=np.array([-1]); # set of allowed slip system IDs. Use -1 for all slip systems
 #microstructureGenerator.addShearLoopDensity(spec)
 
 spec=pyMoDELib.ShearLoopIndividualSpecification()

@@ -15,6 +15,50 @@
 namespace model
 {
 
+    // Cai's doubly-convoluted spreading function in Fourier space
+    template <int N>
+    typename GlidePlaneNoiseBase<N>::REAL_SCALAR GlidePlaneNoiseBase<N>::Wk_Cai(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a)
+    {
+        REAL_SCALAR k = sqrt(kx*kx + ky*ky + kz*kz);
+        if(k>0.0)
+        {
+            return a*k*sqrt(0.5*boost::math::cyl_bessel_k(2,a*k));
+        }
+        else
+        {
+            return 1.;
+        }
+    }
+
+    // Square of Cai's doubly-convoluted spreading function in Fourier space
+    template <int N>
+    typename GlidePlaneNoiseBase<N>::REAL_SCALAR GlidePlaneNoiseBase<N>::Wk_Cai_squared(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a)
+    {
+        const REAL_SCALAR k2(kx*kx + ky*ky + kz*kz);
+        const REAL_SCALAR k(sqrt(k2));
+        if(k2>0.0)
+        {
+            return a*a*k2*0.5*boost::math::cyl_bessel_k(2,a*k);
+        }
+        else
+        {
+            return 1.;
+        }
+    }
+
+    // Cai spreading function
+    template <int N>
+    typename GlidePlaneNoiseBase<N>::REAL_SCALAR GlidePlaneNoiseBase<N>::W_Cai(REAL_SCALAR r2, REAL_SCALAR a)
+    {
+        return 15.*a*a*a*a/(8.*M_PI*pow(r2+a*a,7./2.));
+    }
+
+    template <int N>
+    typename GlidePlaneNoiseBase<N>::REAL_SCALAR GlidePlaneNoiseBase<N>::W_t_Cai(REAL_SCALAR r2, REAL_SCALAR a)
+    {
+        return 0.3425*W_Cai(r2,0.9038*a) + 0.6575*W_Cai(r2,0.5451*a);
+    }
+
     template <int N>
     GlidePlaneNoiseBase<N>::GlidePlaneNoiseBase(const std::string& tag_in,
                                                 const int& seed_in,
@@ -26,6 +70,14 @@ namespace model
     /*init*/,gridSize(gridSize_in)
     /*init*/,gridSpacing(gridSpacing_in)
     /*init*/,gridLength(gridSize.template cast<double>()*gridSpacing)
+    /*init*/,NX(gridSize(0))
+    /*init*/,NY(gridSize(1))
+    /*init*/,NZ(gridSize(2))
+    /*init*/,NK(NZ>1 ? NX*NY*(NZ/2+1) : NX*(NY/2+1))
+    /*init*/,NR(NX*NY*NZ)
+    /*init*/,LX(gridLength(0))
+    /*init*/,LY(gridLength(1))
+    /*init*/,LZ(gridLength(2))
     {
     }
 
@@ -55,15 +107,6 @@ namespace model
         std::cout<<greenBoldColor<<"Computing "+tag<<defaultColor<<std::flush;
         const auto t0= std::chrono::system_clock::now();
 
-        const int& NX(gridSize(0));
-        const int& NY(gridSize(1));
-        const int& NZ(gridSize(2));
-        const int NK(NX*NY*(NZ/2+1));
-        const int NR(NX*NY*NZ);
-        const double& LX(gridLength(0));
-        const double& LY(gridLength(1));
-        const double& LZ(gridLength(2));
-
 #ifdef _MODEL_GLIDE_PLANE_NOISE_GENERATOR_
         
     // Allocate k-space and r-space vectors
@@ -76,16 +119,21 @@ namespace model
     }
     
     // Retreive k-correlations and randomize them
+        // Compute loop bounds conditionally
+    const int J_MAX = (NZ > 1) ? NY : (NY/2 + 1);
+    const int K_MAX = (NZ > 1) ? (NZ/2 + 1) : 1 ;
+
     std::default_random_engine generator(seed);
     std::normal_distribution<REAL_SCALAR> distribution(0.0,1.0);
     for(int i=0; i<NX; i++)
     {
-        for(int j=0; j<NY; j++)
+        for(int j=0; j<J_MAX; j++)
         {
-            for(int k=0; k<(NZ/2+1); k++)
+            for(int k=0; k<K_MAX; k++)
             {
-                const int ind = NY*(NZ/2+1)*i + j*(NZ/2+1) + k;
-                
+//                const int ind = NY*(NZ/2+1)*i + j*(NZ/2+1) + k;
+                const int ind = J_MAX*K_MAX*i + j*K_MAX + k;
+
                 REAL_SCALAR kx = 2.*M_PI/LX*REAL_SCALAR(i);
                 if(i>NX/2)
                 {
@@ -118,7 +166,7 @@ namespace model
                     Mk_xz = -Mk_yz;
                 }
                 
-                const double kCorrFactor((k==0 || k==NZ/2)? 1.0 : 2.0); // /!\ special case for k=0 and k==NZ/2 because of folding of C2R Fourier transform
+                const double kCorrFactor(NZ>1 ? ((k==0 || k==NZ/2)? 1.0 : 2.0) : ((j==0 || j==NY/2)? 1.0 : 2.0)); // /!\ special case for k=0 and k==NZ/2 because of folding of C2R Fourier transform
                 const auto kCorr(kCorrelations(kv,kvID));
                 for(int n=0;n<N;++n)
                 {
@@ -132,7 +180,8 @@ namespace model
     for(int n=0;n<N;++n)
     {
         kNoisyCorrelations[n][0]=0;
-        fftw_plan nPlan = fftw_plan_dft_c2r_3d(NX, NY, NZ, reinterpret_cast<fftw_complex*>(kNoisyCorrelations[n]), rNoisyCorrelations[n], FFTW_ESTIMATE);
+        fftw_plan nPlan = (NZ>1 ? fftw_plan_dft_c2r_3d(NX, NY, NZ, reinterpret_cast<fftw_complex*>(kNoisyCorrelations[n]), rNoisyCorrelations[n], FFTW_ESTIMATE)
+                                : fftw_plan_dft_c2r_2d(NX, NY, reinterpret_cast<fftw_complex*>(kNoisyCorrelations[n]), rNoisyCorrelations[n], FFTW_ESTIMATE));
         fftw_execute(nPlan);
     }
     

@@ -41,6 +41,19 @@ shutil.copy2(noiseFileTemplate,'inputFiles/'+noiseFile) # target filename is /ds
 #setInputVariable(noiseFile,'seed','1')
 setInputVariable('inputFiles/'+noiseFile,'MSSS_SI','0.45e18')
 
+#noiseFile='MDSolidSolution.txt';
+#noiseFileTemplate='../../Library/GlidePlaneNoise/'+noiseFile;
+#print("\033[1;32mCreating  noiseFile\033[0m")
+#shutil.copy2(noiseFileTemplate,'inputFiles/'+noiseFile) # target filename is /dst/dir/file.ext
+#setInputVariable('inputFiles/'+noiseFile,'type','MDSolidSolutionNoise')
+#setInputVariable('inputFiles/'+noiseFile,'tag','0')
+#setInputVariable('inputFiles/'+noiseFile,'seed','0')
+#setInputVariable('inputFiles/'+noiseFile,'correlationFile_L',os.path.abspath('../../Library/GlidePlaneNoise/MDSolidSolutionCorrelations_L_MoNbTi.vtk'))
+#setInputVariable('inputFiles/'+noiseFile,'correlationFile_T',os.path.abspath('../../Library/GlidePlaneNoise/MDSolidSolutionCorrelations_T_MoNbTi.vtk'))
+#setInputVector('inputFiles/'+noiseFile,'gridSize',np.array([100,100,1]),'number of grid points in each direction')
+#setInputVector('inputFiles/'+noiseFile,'gridSpacing_SI',np.array([1.12e-10,1.06e-10,1e-10]),'grid spacing in each direction')
+#setInputVariable('inputFiles/'+noiseFile,'a_cai_SI','0')
+
 # Make a local copy of material file, and modify that copy if necessary
 materialFile='AlMg15.txt';
 materialFileTemplate='../../Library/Materials/'+materialFile;

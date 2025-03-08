@@ -260,6 +260,8 @@ PYBIND11_MODULE(pyMoDELib,m)
         .def_readwrite("numberOfSides", &ShearLoopDensitySpecification::numberOfSides)
         .def_readwrite("radiusDistributionMean", &ShearLoopDensitySpecification::radiusDistributionMean)
         .def_readwrite("radiusDistributionStd", &ShearLoopDensitySpecification::radiusDistributionStd)
+        .def_readwrite("allowedGrainIDs", &ShearLoopDensitySpecification::allowedGrainIDs)
+        .def_readwrite("allowedSlipSystemIDs", &ShearLoopDensitySpecification::allowedSlipSystemIDs)
     ;
 
     py::class_<ShearLoopIndividualSpecification

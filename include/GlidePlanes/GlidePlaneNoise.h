@@ -16,6 +16,7 @@
 #include <GlidePlaneNoiseBase.h>
 #include <PolycrystallineMaterialBase.h>
 #include <AnalyticalSolidSolutionNoise.h>
+#include <MDSolidSolutionNoise.h>
 
 namespace model
 {

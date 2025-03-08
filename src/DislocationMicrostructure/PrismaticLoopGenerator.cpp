@@ -88,7 +88,6 @@ PrismaticLoopGenerator::PrismaticLoopGenerator(const PrismaticLoopDensitySpecifi
                 
                 const int allowedIndex(allowedSlipSystemDist(generator));
                 const int allowedSlipID(spec.allowedSlipSystemIDs[allowedIndex]);
-                
                 const int rSS(allowedSlipID<0 ? ssDist(generator) : allowedSlipID); // a random SlipSystem
                 const double radius(radiusDistribution(generator));
                 try

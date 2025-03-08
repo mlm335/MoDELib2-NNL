@@ -12,7 +12,6 @@
 #include <random>
 
 #include <Eigen/Dense>
-#include <boost/math/special_functions/bessel.hpp>
 
 #include <PolycrystallineMaterialBase.h>
 #include <NoiseTraits.h>
@@ -34,13 +33,13 @@ namespace model
         const REAL_SCALAR a_cai;
         const double stressPrefactor;
         
-        static REAL_SCALAR Wk_Cai(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a) ;
-        static REAL_SCALAR Wk_Cai_squared(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a) ;
-
-        // Cai spreading function
-        static REAL_SCALAR W_Cai(REAL_SCALAR r2, REAL_SCALAR a) ;
- 
-        static REAL_SCALAR W_t_Cai(REAL_SCALAR r2, REAL_SCALAR a) ;
+//        static REAL_SCALAR Wk_Cai(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a) ;
+//        static REAL_SCALAR Wk_Cai_squared(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz, REAL_SCALAR a) ;
+//
+//        // Cai spreading function
+//        static REAL_SCALAR W_Cai(REAL_SCALAR r2, REAL_SCALAR a) ;
+// 
+//        static REAL_SCALAR W_t_Cai(REAL_SCALAR r2, REAL_SCALAR a) ;
         // normalized auto-correlation function in Fourier space for sigma_xy
         REAL_SCALAR S_xy_k(REAL_SCALAR kx, REAL_SCALAR ky, REAL_SCALAR kz) const;
 

@@ -64,12 +64,8 @@ class PolyCrystalFile(dict):
         x1=self.grain1globalX1/np.linalg.norm(self.grain1globalX1);
         x3=self.grain1globalX3/np.linalg.norm(self.grain1globalX3);
         self.C2G=np.array([x1,np.cross(x3,x1),x3]);
-        
-#        if self.alignToSlipSystem0:
-#            self.boxEdges=self.C2G
-        
+                
         # Find lattice vectors (columns of L) aligned to boxEdges
-#        L=np.zeros((3,3))
         B=self.invA@self.boxEdges.transpose()
         for j in range(0, 3):
             b=B[:,j]/np.max(np.abs(B[:,j]))
@@ -85,7 +81,6 @@ class PolyCrystalFile(dict):
                 nr[i]=n[i]*dp/d[i]
             self.boxEdgesLatticeDirections[:,j]=self.A@nr.transpose()
             self.boxEdgesLatticeLengths[j]=np.linalg.norm(self.boxEdgesLatticeDirections[:,j])
-            #self.F[:,j]=self.C2G@self.boxEdgesLatticeDirections[:,j]*self.boxScaling[j]
             self.F[:,j]=self.C2G@self.boxEdgesLatticeDirections[:,j]*np.round(self.boxScaling[j]/self.boxEdgesLatticeLengths[j])
         
     def write(self,folderName):
@@ -93,7 +88,6 @@ class PolyCrystalFile(dict):
         polyFile = open(folderName+'/polycrystal.txt', 'w')
         polyFile.write('materialFile='+self.materialFile+';\n')
         polyFile.write('absoluteTemperature='+str(self.absoluteTemperature)+'; # [K] simulation temperature \n')
-#        polyFile.write('dislocationMobilityType='+self.dislocationMobilityType+'; # default or FCC,BCC,HEXbasal,HEXprismatic,HEXpyramidal \n')
         polyFile.write('meshFile='+self.meshFile+'; # mesh file \n')
         polyFile.write('C2G1='+' '.join(map(str, self.C2G[0,:]))+'\n')
         polyFile.write('     '+' '.join(map(str, self.C2G[1,:]))+'\n')
