@@ -18,19 +18,25 @@ setInputVariable('inputFiles/'+DDfile,'useDislocations','1')
 setInputVariable('inputFiles/'+DDfile,'useInclusions','0')
 setInputVariable('inputFiles/'+DDfile,'useElasticDeformation','1')
 setInputVariable('inputFiles/'+DDfile,'useClusterDynamics','0')
+
+setInputVariable('inputFiles/'+DDfile,'Nsteps','10000')  # number of simulation steps
+setInputVector('inputFiles/'  +DDfile,'periodicImageSize',np.array([1,1,1]),'')
+setInputVariable('inputFiles/'+DDfile,'EwaldLengthFactor','1')
 setInputVariable('inputFiles/'+DDfile,'timeSteppingMethod','adaptive') # adaptive or fixed
 setInputVariable('inputFiles/'+DDfile,'dtMax','1e25')
 setInputVariable('inputFiles/'+DDfile,'dxMax','1') # max nodal displacement for when timeSteppingMethod=adaptive
 setInputVariable('inputFiles/'+DDfile,'use_velocityFilter','0') # don't filter velocity if noise is enabled
-setInputVariable('inputFiles/'+DDfile,'use_stochasticForce','0') # Langevin thermal noise enabled
+setInputVariable('inputFiles/'+DDfile,'useSubCycling','0')
+
+setInputVariable('inputFiles/'+DDfile,'glideSolverType','Galerkin')  # type of glide solver, or none
+setInputVariable('inputFiles/'+DDfile,'climbSolverType','none')  # type of clim solver, or none
+setInputVariable('inputFiles/'+DDfile,'quadPerLength','0.1')
+setInputVariable('inputFiles/'+DDfile,'remeshFrequency','10')
 setInputVariable('inputFiles/'+DDfile,'alphaLineTension','0.1') # dimensionless scale factor in for line tension forces
 setInputVariable('inputFiles/'+DDfile,'Lmin','25')  # min segment length (in Burgers vector units)
 setInputVariable('inputFiles/'+DDfile,'Lmax','150')  # max segment length (in Burgers vector units)
 setInputVariable('inputFiles/'+DDfile,'outputFrequency','10')  # output frequency
 setInputVariable('inputFiles/'+DDfile,'outputQuadraturePoints','0')  # output quadrature data
-setInputVariable('inputFiles/'+DDfile,'glideSolverType','Galerkin')  # type of glide solver, or none
-setInputVariable('inputFiles/'+DDfile,'climbSolverType','none')  # type of clim solver, or none
-setInputVariable('inputFiles/'+DDfile,'Nsteps','10000')  # number of simulation steps
 setInputVariable('inputFiles/'+DDfile,'crossSlipModel','1')  # crossSlipModel
 
 # Make a local copy of material file, and modify that copy if necessary

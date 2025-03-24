@@ -66,44 +66,14 @@ pf.X0=np.array([0,0,0]) # Centering unitCube mesh. Mesh nodes X are mapped to x=
 pf.periodicFaceIDs=np.array([])
 pf.write('inputFiles')
 
-
-# Generate a Texture for Polycrystals
-#f_param = [0.63,0.32] #PWR radial, transverse, axial f-params
-##f_param = [0.32,0.61] #CANDU radial, transverse, axial f-params
-#def random_output(numbers):
-#    random.seed(datetime.now().timestamp())
-#    j = random.random()
-#    if j < f_param[0]:
-#            return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #crystal c align with global x
-#            #return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #All crystal c align with global x
-#    elif j > f_param[0] and j < f_param[0]+f_param[1]:
-#            return np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]]) #crystal c align with global y
-#            #return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #All crystal c align with global x
-#    else:
-#            return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) #crystal c align with global z
-#            #return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #All crystal c align with global x
-#N = 30
-#C2G = []
-#for i in range(N):
-#    R = random_output(i)
-#    C2G.append(R)
-#with open('poly'+str(N)+'.txt', 'w') as fID:
-#    for i in range(N):
-#        fID.write(f'C2G{i + 1} =\n')
-#        fID.write(' '.join([f'{val:.15f}' for val in C2G[i][0]]) + '\n')
-#        fID.write(' '.join([f'{val:.15f}' for val in C2G[i][1]]) + '\n')
-#        fID.write(' '.join([f'{val:.15f}' for val in C2G[i][2]]) + ';\n\n')
-
-
-
 # make a local copy of microstructure file, and modify that copy if necessary
 microstructureFile1='frankLoopsDensity.txt';
 microstructureFileTemplate1='../../Library/Microstructures/'+microstructureFile1;
 print("\033[1;32mCreating  microstructureFile\033[0m")
 shutil.copy2(microstructureFileTemplate1,'inputFiles/'+microstructureFile1) # target filename is /dst/dir/file.ext
-setInputVariable('inputFiles/'+microstructureFile1,'targetDensity','1e12')
+setInputVariable('inputFiles/'+microstructureFile1,'targetDensity','5e12')
 setInputVector('inputFiles/'+microstructureFile1,'planeIDs',np.array([0]),'')
-setInputVariable('inputFiles/'+microstructureFile1,'radiusDistributionMean','1e-8') # [m] mean of loop radii
+setInputVariable('inputFiles/'+microstructureFile1,'radiusDistributionMean','30e-9') # [m] mean of loop radii
 setInputVariable('inputFiles/'+microstructureFile1,'radiusDistributionStd','0e-8') # [m] std of loop radii
 setInputVariable('inputFiles/'+microstructureFile1,'numberOfSides','20') # [-] number of sides in each loop polygon
 setInputVariable('inputFiles/'+microstructureFile1,'burgersFactor','0.5') # [-] scaling of burgers vector
@@ -115,7 +85,7 @@ microstructureFileTemplate2='../../Library/Microstructures/'+microstructureFile2
 print("\033[1;32mCreating  microstructureFile\033[0m")
 shutil.copy2(microstructureFileTemplate2,'inputFiles/'+microstructureFile2) # target filename is /dst/dir/file.ext
 setInputVector('inputFiles/'+microstructureFile2,'slipSystemIDs',np.array([6,8,10,6,8,10]),'')
-setInputVector('inputFiles/'+microstructureFile2,'targetDensity',np.array([1e18,1e18,1e18,1e18,1e18,1e18]),'')
+setInputVector('inputFiles/'+microstructureFile2,'targetDensity',np.array([1e20,1e20,1e20,1e20,1e20,1e20]),'')
 setInputVector('inputFiles/'+microstructureFile2,'loopRadiusMean',np.array([10e-9,10e-9,10e-9,10e-9,10e-9,10e-9]),'')
 setInputVector('inputFiles/'+microstructureFile2,'loopRadiusStd',np.array([0,0,0,0,0,0]),'')
 setInputVector('inputFiles/'+microstructureFile2,'numberOfSides',np.array([36,36,36,36,36,36]),'')
