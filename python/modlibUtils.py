@@ -1,6 +1,8 @@
 import sys, string, os, fileinput, shutil
 from fractions import Fraction
 import numpy as np
+import random
+from datetime import datetime
 # evl file
 
 class EVL:
@@ -15,6 +17,12 @@ class AUX:
 class PolyCrystalFile(dict):
     materialFile=''
     crystalStructure=''
+    
+    singleCrystal=True
+    f_param = [1,0] #PWR radial, transverse, axial f-params
+    numberGrains = 1
+    C2G = np.zeros((3,3))
+
     absoluteTemperature=300.0
     dislocationMobilityType='default'
     meshFile='../../Library/Meshes/unitCube.msh'
@@ -27,7 +35,6 @@ class PolyCrystalFile(dict):
     boxEdgesLatticeDirections=np.zeros((3,3)) # i-th col is the lattice direction of i-th box edge. Overwritten if alignToSlipSystem0=true
     boxEdgesLatticeLengths=np.array([1.,1.,1.]) # i-th element is the length of the lattice direction of i-th box edge. Overwritten if alignToSlipSystem0=true
     boxScaling=np.array([1000,1000,1000]) # must be a vector of integers
-    C2G=np.zeros((3,3))
     F=np.zeros((3,3))
     X0=np.array([0,0,0])
     periodicFaceIDs=np.array([0,1,2,3,4,5])
@@ -61,27 +68,44 @@ class PolyCrystalFile(dict):
             else:
                 raise Exception("Unkonwn crystalStructure "+self.crystalStructure)
         
-        x1=self.grain1globalX1/np.linalg.norm(self.grain1globalX1);
-        x3=self.grain1globalX3/np.linalg.norm(self.grain1globalX3);
-        self.C2G=np.array([x1,np.cross(x3,x1),x3]);
-                
-        # Find lattice vectors (columns of L) aligned to boxEdges
-        B=self.invA@self.boxEdges.transpose()
-        for j in range(0, 3):
-            b=B[:,j]/np.max(np.abs(B[:,j]))
-            n=np.array([0,0,0], dtype=int)
-            d=np.array([1,1,1], dtype=int)
-            for i in range(0, 3):
-                f=Fraction(b[i]).limit_denominator(100)
-                n[i]=f.numerator
-                d[i]=f.denominator
-            dp=np.prod(d);
-            nr=np.array([1,1,1], dtype=int)
-            for i in range(0, 3):
-                nr[i]=n[i]*dp/d[i]
-            self.boxEdgesLatticeDirections[:,j]=self.A@nr.transpose()
-            self.boxEdgesLatticeLengths[j]=np.linalg.norm(self.boxEdgesLatticeDirections[:,j])
-            self.F[:,j]=self.C2G@self.boxEdgesLatticeDirections[:,j]*np.round(self.boxScaling[j]/self.boxEdgesLatticeLengths[j])
+        if self.singleCrystal:
+            x1=self.grain1globalX1/np.linalg.norm(self.grain1globalX1);
+            x3=self.grain1globalX3/np.linalg.norm(self.grain1globalX3);
+            self.C2G=np.array([x1,np.cross(x3,x1),x3]);
+                    
+            # Find lattice vectors (columns of L) aligned to boxEdges
+            B=self.invA@self.boxEdges.transpose()
+            for j in range(0, 3):
+                b=B[:,j]/np.max(np.abs(B[:,j]))
+                n=np.array([0,0,0], dtype=int)
+                d=np.array([1,1,1], dtype=int)
+                for i in range(0, 3):
+                    f=Fraction(b[i]).limit_denominator(100)
+                    n[i]=f.numerator
+                    d[i]=f.denominator
+                dp=np.prod(d);
+                nr=np.array([1,1,1], dtype=int)
+                for i in range(0, 3):
+                    nr[i]=n[i]*dp/d[i]
+                self.boxEdgesLatticeDirections[:,j]=self.A@nr.transpose()
+                self.boxEdgesLatticeLengths[j]=np.linalg.norm(self.boxEdgesLatticeDirections[:,j])
+                self.F[:,j]=self.C2G@self.boxEdgesLatticeDirections[:,j]*np.round(self.boxScaling[j]/self.boxEdgesLatticeLengths[j])
+        else:
+            self.C2G = []
+            def random_output(numbers):
+                random.seed(datetime.now().timestamp())
+                j = random.random()
+                if j < self.f_param[0]:
+                        return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #crystal c align with global x
+                elif j > self.f_param[0] and j < self.f_param[0]+self.f_param[1]:
+                        return np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]]) #crystal c align with global y
+                else:
+                        return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) #crystal c align with global z
+            for i in range(self.numberGrains):
+                self.C2G.append(random_output(i))
+            self.F=np.diag(self.boxScaling);
+
+
         
     def write(self,folderName):
         self.compute()
@@ -89,14 +113,37 @@ class PolyCrystalFile(dict):
         polyFile.write('materialFile='+self.materialFile+';\n')
         polyFile.write('absoluteTemperature='+str(self.absoluteTemperature)+'; # [K] simulation temperature \n')
         polyFile.write('meshFile='+self.meshFile+'; # mesh file \n')
-        polyFile.write('C2G1='+' '.join(map(str, self.C2G[0,:]))+'\n')
-        polyFile.write('     '+' '.join(map(str, self.C2G[1,:]))+'\n')
-        polyFile.write('     '+' '.join(map(str, self.C2G[2,:]))+'; # crystal rotation matrix \n')
+#        polyFile.write('C2G1='+' '.join(map(str, self.C2G[0,:]))+'\n')
+#        polyFile.write('     '+' '.join(map(str, self.C2G[1,:]))+'\n')
+#        polyFile.write('     '+' '.join(map(str, self.C2G[2,:]))+'; # crystal rotation matrix \n')
         polyFile.write('F='+' '.join(map(str, self.F[0,:]))+'\n')
         polyFile.write('  '+' '.join(map(str, self.F[1,:]))+'\n')
         polyFile.write('  '+' '.join(map(str, self.F[2,:]))+'; # mesh deformation gradient. Mesh nodes X are mapped to x=F*(X-X0) \n')
         polyFile.write('X0='+' '.join(map(str, self.X0))+'; # mesh shift. Mesh nodes X are mapped to x=F*(X-X0) \n')
         polyFile.write('periodicFaceIDs='+' '.join(map(str, self.periodicFaceIDs))+'; # IDs of faces labelled as periodic \n')
+        
+#        for i in range(self.numberGrains):
+#            polyFile.write(f'C2G{i + 1} =\n')
+#            polyFile.write(' '.join([f'{val:.15f}' for val in self.C2G[i][0]]) + '\n')
+#            polyFile.write(' '.join([f'{val:.15f}' for val in self.C2G[i][1]]) + '\n')
+#            polyFile.write(' '.join([f'{val:.15f}' for val in self.C2G[i][2]]) + ';\n\n')
+
+        if self.singleCrystal:
+                polyFile.write(f'C2G1 =\n')
+                for i, row in enumerate(self.C2G):
+                    line = ' '.join([f'{val:.15f}' for val in row])
+                    if i == 2:
+                        line += ';'
+                    polyFile.write(line + '\n')
+        else:
+            for i in range(self.numberGrains):
+                polyFile.write(f'C2G{i + 1} =\n')
+                for j, row in enumerate(self.C2G[i]):
+                    line = ' '.join([f'{val:.15f}' for val in row])
+                    if j == 2:
+                        line += ';'
+                    polyFile.write(line + '\n')
+            
         polyFile.close()
 
 def readEVLtxt(filename):

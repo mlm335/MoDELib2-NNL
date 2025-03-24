@@ -24,6 +24,8 @@
 #include <StackingFaultTetrahedraGenerator.h>
 #include <FrankLoopsGenerator.h>
 #include <PlanarLoopGenerator.h>
+#include <aLoopGenerator.h>
+
 #include <ClusterDynamicsParameters.h>
 
 namespace model
@@ -120,6 +122,16 @@ namespace model
     void MicrostructureGenerator::addPlanarLoopIndividual(const PlanarLoopIndividualSpecification& spec)
     {
         PlanarLoopGenerator gen(spec,*this);
+    }
+
+    void MicrostructureGenerator::addaLoopDensity(const aLoopDensitySpecification& spec)
+    {
+        aLoopGenerator gen(spec,*this);
+    }
+
+    void MicrostructureGenerator::addaLoopIndividual(const aLoopIndividualSpecification& spec)
+    {
+        aLoopGenerator gen(spec,*this);
     }
 
     void MicrostructureGenerator::readMicrostructureFile()
@@ -270,6 +282,23 @@ namespace model
                 }
                 //                        success=this->emplace(tag,new PlanarLoopGenerator(microstructureFileName)).second;
             }
+            else if(type=="aLoops")
+            {
+                if(style=="Density" || style=="density")
+                {
+                    aLoopDensitySpecification spec(microstructureFileName);
+                    addaLoopDensity(spec);
+                }
+                else if(style=="Individual" || style=="individual")
+                {
+                    aLoopIndividualSpecification spec(microstructureFileName);
+                    addaLoopIndividual(spec);
+                }
+                else
+                {
+                    throw std::runtime_error("Unkown style "+style+" for "+type);
+                }
+            }
             //        else if(microstructureType=="PolyhedronInclusions")
             //        {
             //            success=this->emplace(tag,new PolyhedronInclusionsGenerator(microstructureFileName)).second;
@@ -310,7 +339,7 @@ namespace model
         return auxIO;
     }
 
-    bool MicrostructureGenerator::insertJunctionLoop(const std::vector<VectorDimD>& loopNodePos,
+    void MicrostructureGenerator::insertJunctionLoop(const std::vector<VectorDimD>& loopNodePos,
                                                      const std::shared_ptr<PeriodicGlidePlane<3>>& periodicPlane,
                                                      const VectorDimD& b,
                                                      const VectorDimD& unitNormal,
@@ -318,39 +347,29 @@ namespace model
                                                      const size_t& grainID,
                                                      const DislocationLoopIO<dim>::DislocationLoopType& loopType)
     {
-        const bool nodesInsideGrain(ddBase.isPeriodicDomain? true : allPointsInGrain(loopNodePos,grainID));
-        if(nodesInsideGrain)
+        std::vector<PolyPoint> dummyPolyPoints;
+        std::vector<std::pair<VectorDimD, const PolyPoint *const>> loopNodePosTemp;
+        for(const auto& pos : loopNodePos)
         {
-            std::vector<PolyPoint> dummyPolyPoints;
-            std::vector<std::pair<VectorDimD, const PolyPoint *const>> loopNodePosTemp;
-            for(const auto& pos : loopNodePos)
-            {
-                dummyPolyPoints.push_back(PolyPoint());
-                loopNodePosTemp.emplace_back(pos, &dummyPolyPoints.back());
-            }
-            
-            const auto ppi(periodicPlane->polygonPatchIntersection(loopNodePosTemp,true));
-            const size_t loopID(insertLoop(b,unitNormal,P0,grainID,loopType));
-            std::vector<size_t> loopNodeIDs;
-            for(const auto &tup : ppi)
-            {
-                const VectorDimD loopNodePos(periodicPlane->referencePlane->globalPosition(std::get<0>(tup)));
-                const VectorDimD networkNodePos(loopNodePos+std::get<1>(tup));
-                const auto networkNodeIter(uniqueNetworkNodeMap.find(networkNodePos));
-                if(networkNodeIter==uniqueNetworkNodeMap.end())
-                {// no NetworkNode found at current position
-                    uniqueNetworkNodeMap.emplace(networkNodePos,insertNetworkNode(networkNodePos)); // insert NetworkNode and store its ID
-                }
-                loopNodeIDs.push_back(insertLoopNode(loopID,loopNodePos,uniqueNetworkNodeMap.at(networkNodePos),std::get<1>(tup),std::get<2>(tup))); // insert LoopNode and store its ID
-            }
-            insertLoopLinks(loopID,loopNodeIDs);
-            return true;
+            dummyPolyPoints.push_back(PolyPoint());
+            loopNodePosTemp.emplace_back(pos, &dummyPolyPoints.back());
         }
-        else
+        
+        const auto ppi(periodicPlane->polygonPatchIntersection(loopNodePosTemp,true));
+        const size_t loopID(insertLoop(b,unitNormal,P0,grainID,loopType));
+        std::vector<size_t> loopNodeIDs;
+        for(const auto &tup : ppi)
         {
-            std::cout<<"nodes outside grain "<<grainID<<std::endl;
-            return false;
+            const VectorDimD loopNodePos(periodicPlane->referencePlane->globalPosition(std::get<0>(tup)));
+            const VectorDimD networkNodePos(loopNodePos+std::get<1>(tup));
+            const auto networkNodeIter(uniqueNetworkNodeMap.find(networkNodePos));
+            if(networkNodeIter==uniqueNetworkNodeMap.end())
+            {// no NetworkNode found at current position
+                uniqueNetworkNodeMap.emplace(networkNodePos,insertNetworkNode(networkNodePos)); // insert NetworkNode and store its ID
+            }
+            loopNodeIDs.push_back(insertLoopNode(loopID,loopNodePos,uniqueNetworkNodeMap.at(networkNodePos),std::get<1>(tup),std::get<2>(tup))); // insert LoopNode and store its ID
         }
+        insertLoopLinks(loopID,loopNodeIDs);
     }
 
     size_t MicrostructureGenerator::insertLoop(const VectorDimD& b,const VectorDimD& unitNormal,const VectorDimD& P0,const size_t& grainID,const DislocationLoopType& loopType)

@@ -1,9 +1,9 @@
 target_sources(${PROJECT_NAME} PRIVATE 
 	${CMAKE_CURRENT_SOURCE_DIR}/MicrostructureSpecificationBase.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MicrostructureGenerator.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/ShearLoopGenerator.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/ShearLoopDensitySpecification.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/ShearLoopIndividualSpecification.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/ShearLoopGenerator.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/ShearLoopDensitySpecification.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/ShearLoopIndividualSpecification.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PeriodicDipoleDensitySpecification.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PeriodicDipoleIndividualSpecification.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PeriodicDipoleGenerator.cpp
@@ -23,6 +23,9 @@ target_sources(${PROJECT_NAME} PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/SphericalInclusionsGenerator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PolyhedronInclusionIndividualSpecification.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PolyhedronInclusionsGenerator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/aLoopDensitySpecification.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/aLoopIndividualSpecification.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/aLoopGenerator.cpp
 #	${CMAKE_CURRENT_SOURCE_DIR}/VTKGenerator.cpp
 			)
 

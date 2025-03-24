@@ -61,6 +61,8 @@
 #include <SphericalInclusionIndividualSpecification.h>
 #include <PolyhedronInclusionIndividualSpecification.h>
 #include <PlanarLoopIndividualSpecification.h>
+#include <aLoopDensitySpecification.h>
+#include <aLoopIndividualSpecification.h>
 
 namespace model
 {
@@ -113,6 +115,8 @@ struct PolyPoint
         void addSphericalInclusionIndividual(const SphericalInclusionIndividualSpecification& spec);
         void addPolyhedronInclusionIndividual(const PolyhedronInclusionIndividualSpecification& spec);
         void addPlanarLoopIndividual(const PlanarLoopIndividualSpecification& spec);
+        void addaLoopDensity(const aLoopDensitySpecification& spec);
+        void addaLoopIndividual(const aLoopIndividualSpecification& spec);
 
         size_t insertLoop(const VectorDimD& b,const VectorDimD& unitNormal,const VectorDimD& P0,const size_t& grainID,const DislocationLoopType& loopType);
         size_t insertLoopNode(const size_t& loopID,const VectorDimD& loopNodePos,const size_t& networkNodeID,const VectorDimD& loopNodeShift,const std::pair<short int,short int>& periodicEdgeIDs);
@@ -121,7 +125,7 @@ struct PolyPoint
         size_t insertInclusion(const VectorDimD& pos,const double& R, const Eigen::Matrix<double,dim,dim>& eT, const double& vrc,const int&type);
         size_t insertInclusion(const std::map<size_t,Eigen::Vector3d>& nodes,const std::map<size_t,std::vector<size_t>>& faceMap, const Eigen::Matrix<double,dim,dim>& eT, const double& vrc,const int&type);
         void writeConfigFiles(const size_t& fileID);
-        bool insertJunctionLoop(const std::vector<VectorDimD>& loopNodePos,
+        void insertJunctionLoop(const std::vector<VectorDimD>& loopNodePos,
                                 const std::shared_ptr<PeriodicGlidePlane<3>>& periodicPlane,
                                 const VectorDimD& b,
                                 const VectorDimD& unitNormal,
