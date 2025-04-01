@@ -22,7 +22,7 @@ setInputVariable('inputFiles/'+DDfile,'useElasticDeformation','1')
 setInputVariable('inputFiles/'+DDfile,'useClusterDynamics','1')
 setInputVariable('inputFiles/'+DDfile,'Nsteps','6')  # number of simulation steps
 setInputVariable('inputFiles/'+DDfile,'timeSteppingMethod','fixed') # adaptive or fixed
-setInputVariable('inputFiles/'+DDfile,'dtMax','26.47935e18')
+setInputVariable('inputFiles/'+DDfile,'dtMax','3.47935e18')
 setInputVariable('inputFiles/'+DDfile,'dxMax','5') # max nodal displacement for when timeSteppingMethod=adaptive
 setInputVariable('inputFiles/'+DDfile,'use_velocityFilter','0') # don't filter velocity if noise is enabled
 setInputVariable('inputFiles/'+DDfile,'use_stochasticForce','0') # Langevin thermal noise enabled
@@ -51,7 +51,7 @@ shutil.copy2(elasticDeformatinoFileTemplate,'inputFiles/'+elasticDeformatinoFile
 setInputVector('inputFiles/'+elasticDeformatinoFile,'ExternalStress0',np.array([0.0,0.0,0.0,0.0,0.0,0.0]),'applied stress')
 
 # Create polycrystal.txt using local material file
-meshFile='poly30_100K.msh';
+meshFile='poly50_100K.msh';
 meshFileTemplate='../../Library/Meshes/'+meshFile;
 print("\033[1;32mCreating  polycrystalFile\033[0m")
 shutil.copy2(meshFileTemplate,'inputFiles/'+meshFile)
@@ -61,46 +61,14 @@ pf.meshFile=meshFile
 
 pf.singleCrystal=False
 pf.f_param=np.array([0.63,0.32])
-pf.numberGrains=30
-
+pf.numberGrains=50
 #pf.grain1globalX1=np.array([1,0,0])     # global x1 axis. Overwritten if alignToSlipSystem0=true
 #pf.grain1globalX3=np.array([0,0,1])    # global x3 axis. Overwritten if alignToSlipSystem0=true
 #pf.boxEdges=np.array([[1,0,0],[0,1,0],[0,0,1]]) # i-throw is the direction of i-th box edge
-
 pf.boxScaling=np.array([3093,3093,3093]) # must be a vector of integers
 pf.X0=np.array([0,0,0]) # Centering unitCube mesh. Mesh nodes X are mapped to x=F*(X-X0)
 pf.periodicFaceIDs=np.array([])
 pf.write('inputFiles')
-
-
-# Generate a Texture for Polycrystals
-#f_param = [0.63,0.32] #PWR radial, transverse, axial f-params
-##f_param = [0.32,0.61] #CANDU radial, transverse, axial f-params
-#def random_output(numbers):
-#    random.seed(datetime.now().timestamp())
-#    j = random.random()
-#    if j < f_param[0]:
-#            return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #crystal c align with global x
-#            #return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #All crystal c align with global x
-#    elif j > f_param[0] and j < f_param[0]+f_param[1]:
-#            return np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]]) #crystal c align with global y
-#            #return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #All crystal c align with global x
-#    else:
-#            return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) #crystal c align with global z
-#            #return np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]) #All crystal c align with global x
-#N = 30
-#C2G = []
-#for i in range(N):
-#    R = random_output(i)
-#    C2G.append(R)
-#with open('poly'+str(N)+'.txt', 'w') as fID:
-#    for i in range(N):
-#        fID.write(f'C2G{i + 1} =\n')
-#        fID.write(' '.join([f'{val:.15f}' for val in C2G[i][0]]) + '\n')
-#        fID.write(' '.join([f'{val:.15f}' for val in C2G[i][1]]) + '\n')
-#        fID.write(' '.join([f'{val:.15f}' for val in C2G[i][2]]) + ';\n\n')
-
-
 
 # make a local copy of microstructure file, and modify that copy if necessary
 microstructureFile1='frankLoopsDensity.txt';

@@ -68,8 +68,6 @@ pf.grain1globalX1=np.array([1,0,0])     # global x1 axis. Overwritten if alignTo
 pf.grain1globalX3=np.array([0,0,1])    # global x3 axis. Overwritten if alignToSlipSystem0=true
 pf.boxEdges=np.array([[1,0,0],[0,1,0],[0,0,1]]) # i-throw is the direction of i-th box edge
 pf.boxScaling=np.array([3093,3093,3093])# length of box edges in Burgers vector units
-
-#pf.boxScaling=np.array([2000,2000,2000]) # must be a vector of integers
 pf.X0=np.array([0,0,0]) # Centering unitCube mesh. Mesh nodes X are mapped to x=F*(X-X0)
 pf.periodicFaceIDs=np.array([-1])
 pf.write('inputFiles')
