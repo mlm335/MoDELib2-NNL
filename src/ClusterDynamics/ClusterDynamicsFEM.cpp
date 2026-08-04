@@ -268,6 +268,31 @@ template struct InvDscaling<3>;
         const int nSub(20);                // explicit sub-steps per dose step
         const double dt(dtTotal/nSub);
 
+        // Share of the homogeneous-clustering (SIA) nucleation flux taken by each
+        // family, normalized WITHIN its own polarity. The 0-D splits that flux with
+        // f_na and f_a -- the very fractions that split the cascade source G_iL into
+        // G_iL/G_aiL (reaction_rates.nucleation_rate_iL/aiL) -- so using
+        // loopCascadeFractions here reproduces the 0-D split exactly and generalizes
+        // to any number of families. Falls back to an equal split if a polarity has
+        // no cascade channel at all.
+        Eigen::Array<double,1,nF> clusShare(Eigen::Array<double,1,nF>::Zero());
+        {
+            Eigen::Array<double,1,2> fracTot(Eigen::Array<double,1,2>::Zero());
+            Eigen::Array<double,1,2> cntTot(Eigen::Array<double,1,2>::Zero());
+            for(int k=0;k<nF;++k)
+            {
+                const int p(isVacancyFamily(k)?0:1);
+                fracTot(p)+=cdp.loopCascadeFractions(k);
+                cntTot(p)+=1.0;
+            }
+            for(int k=0;k<nF;++k)
+            {
+                const int p(isVacancyFamily(k)?0:1);
+                clusShare(k)=(fracTot(p)>0.0)? cdp.loopCascadeFractions(k)/fracTot(p)
+                                             : 1.0/cntTot(p);
+            }
+        }
+
         for(size_t node=0;node<nNodes;++node)
         {
             // ---- local mobile concentrations ------------------------------
@@ -275,6 +300,52 @@ template struct InvDscaling<3>;
             for(int m=0;m<mSize;++m)
             {
                 cM(m)=std::max(mDof(node*mSize+m),0.0);
+            }
+
+            // ---- homogeneous clustering: the SIA nucleation flux ------------
+            // The mobile ladder stops at 3i, so the reactions i+3i, 2i+2i and
+            // 2i+3i push their product OFF it. getR2() therefore debits the
+            // reactants and credits nothing -- which is what raises "Warning: Sum
+            // of R2 is not zero" at start-up. Those interstitials do not vanish:
+            // in the 0-D they are precisely the homogeneous loop-nucleation
+            // source, entering nucleation_rate_iL/aiL as R_i_3i + R_2i_2i (loop
+            // NUMBER) and nucleation_content_i as 4 R_i_3i + 2 R_2i_2i +
+            // 3 R_2i_3i (loop CONTENT). Omitting them here left the <a> loops fed
+            // by cascades alone: measured N_a = 0.53x the 0-D at 30 dpa, against a
+            // cascade-only nucleation share of 7.04e-13/1.144e-12 = 0.62.
+            //
+            // For channel (a,b) getR2() writes -K_ab into BOTH R2[a](a,b) and
+            // R2[a](b,a), so c^T R2[a] c = -2 K_ab c_a c_b -- but the residual is
+            // assembled as R2*(0.5*mobileClusters) (lWF_R2 above; the 0.5 is the
+            // usual quadratic-form factor that makes bWF_R2 = R2*c its exact
+            // Jacobian). The per-species loss rate is therefore K_ab c_a c_b, and
+            // K_ab is exactly the 0-D coefficient:
+            //   i +3i : K = 5.0535e7 = omega_i + omega_3i   -> K c_i c_3i = R_i_3i
+            //   2i+2i : K = 9.877e2  = 4 omega_2i           -> K c_2i^2   = R_2i_2i
+            //   2i+3i : K = 4.938e2  = omega_2i + omega_3i  -> R_2i_3i
+            // One loop embryo is born per event, so that same rate is the
+            // loop-NUMBER source. The CONTENT source is the number of ATOMS that
+            // left the ladder: |m_a|+|m_b| per event for a!=b, and |m_a| per event
+            // when a==b (one species supplying both reactants). Taking both from
+            // the same K_ab makes the split mass-conserving by construction: the
+            // loops gain exactly what the mobile field loses.
+            //
+            // Units: cM are atom fractions, so clusN is loops per ATOM per time
+            // and needs the same /omega as the cascade source to reach loops per
+            // b^3; clusC is atoms per atom per time, which IS the volume-fraction
+            // convention of the content DOF, so it passes through unconverted.
+            // Index 0 = vacancy-type product, 1 = interstitial-type.
+            Eigen::Array<double,1,2> clusN(Eigen::Array<double,1,2>::Zero());
+            Eigen::Array<double,1,2> clusC(Eigen::Array<double,1,2>::Zero());
+            for(const auto& ch : cdp.loopNucChannels)
+            {
+                const int a(ch.first.first);
+                const int c(ch.first.second);
+                const double loss(ch.second*cM(a)*cM(c));      // per-species loss rate
+                const int p((cdp.msVector(a)<0.0)?0:1);
+                clusN(p)+=loss;
+                clusC(p)+=(a==c)? std::fabs(cdp.msVector(a))*loss
+                                : (std::fabs(cdp.msVector(a))+std::fabs(cdp.msVector(c)))*loss;
             }
 
             for(int s=0;s<nSub;++s)
@@ -376,7 +447,15 @@ template struct InvDscaling<3>;
                     // number source does: dividing by Omega turns loops-per-atom
                     // into loops-per-b^3.
                     const double Gk(cdp.G0*cdp.loopCascadeFractions(k));
-                    const double nucRate(Gk/std::max(cdp.nNuc(k),1.0)/cdp.omega);
+                    // Cascade-borne loops are born at nNuc defects; clustering-borne
+                    // embryos are born carrying only the |m_a|+|m_b| atoms of the
+                    // event that made them, so the two sources are NOT divided by
+                    // the same number -- exactly as in the 0-D, where the cascade
+                    // term is G_iL/n_iL_nuc while the clustering term is the bare
+                    // reaction rate. This dilutes the mean loop size, and it should.
+                    const int pol(isVacancyFamily(k)?0:1);
+                    const double nucRate(Gk/std::max(cdp.nNuc(k),1.0)/cdp.omega
+                                         +clusShare(k)*clusN(pol)/cdp.omega);
 
                     // vacancy-loop dissolution (Eqs. 38/53) and thermal
                     // emission of single vacancies (Eqs. 54-56). Both act only
@@ -428,7 +507,7 @@ template struct InvDscaling<3>;
 
                     // implicit for the linear losses, explicit for the sources
                     const double nNew((n(k)+dt*nucRate)/(1.0+dt*lossN));
-                    const double cNew((c(k)+dt*(gdot(k)+Gk-contentSink))/(1.0+dt*lossC));
+                    const double cNew((c(k)+dt*(gdot(k)+Gk+clusShare(k)*clusC(pol)-contentSink))/(1.0+dt*lossC));
                     iDof(node*iSize+k)     = std::max(nNew,nFloor);
                     iDof(node*iSize+nF+k)  = std::max(cNew,cFloor);
                 }

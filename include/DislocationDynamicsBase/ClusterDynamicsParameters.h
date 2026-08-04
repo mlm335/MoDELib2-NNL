@@ -72,6 +72,15 @@ struct ClusterDynamicsParameters
     const Eigen::Matrix<double,mSize,mSize> R1cd;
     // Second-order reaction
     const std::vector<Eigen::Matrix<double,mSize,mSize>> R2;
+    /*! Homogeneous-clustering channels: the subset of reactionMap whose product
+     *  size m_a+m_b is carried by NO mobile species, so the product leaves the
+     *  mobile ladder altogether. Physically these are the reactions that nucleate
+     *  a new loop; in the 0-D they are R_i_3i (i+3i -> 4i) and R_2i_2i
+     *  (2i+2i -> 4i), which feed nucleation_rate_iL/aiL and nucleation_content_i.
+     *  Stored as (a,b) -> K_ab, the SAME coefficient getR2() writes into R2, so
+     *  the loops gain exactly what the mobile solve loses. Empty when iSize<=0.
+     *  Consumed by ClusterDynamicsFEM::solveImmobileClusters(). */
+    const std::map<std::pair<int,int>,double> loopNucChannels;
 
     // Bias factors
     const Eigen::Array<double,2,mSize> discreteDislocationBias;
@@ -148,6 +157,8 @@ struct ClusterDynamicsParameters
     std::map<std::pair<int,int>,double> getMap(const Eigen::Array<double,mSize*(mSize+1)/2,3> matrix_in) const;
     Eigen::Matrix<double,mSize,mSize> getR1() const;
     std::vector<Eigen::Matrix<double,mSize,mSize>> getR2() const;
+    /*! Build loopNucChannels; see its declaration. */
+    std::map<std::pair<int,int>,double> getLoopNucChannels() const;
     Eigen::Array<double,1,iSize/2> getImmobileSpeciesBurgersMagnitude(const std::map<size_t,Grain<dim>>& grains) const;
     std::map<size_t,std::vector<Eigen::Matrix<double,dim,dim>>> getD(const std::map<size_t,Grain<dim>>& grains) const;
     std::vector<Eigen::Matrix<double,dim,dim>> getDlocal() const;

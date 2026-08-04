@@ -93,6 +93,7 @@ namespace model
     /* init */ R1(mSize>1 ? getR1() : Eigen::Matrix<double,mSize,mSize>::Zero()),
     /* init */ R1cd(iSize>0 ? msVector.abs().matrix().asDiagonal()*R1*(1.0/msVector.abs()).matrix().asDiagonal() : Eigen::Matrix<double,mSize,mSize>::Zero().eval()),
     /* init */ R2(mSize>1 ? getR2() : std::vector<Eigen::Matrix<double,mSize,mSize>>(2,Eigen::Matrix<double,mSize,mSize>::Zero())),
+    /* init */ loopNucChannels((mSize>1 && iSize>0) ? getLoopNucChannels() : std::map<std::pair<int,int>,double>()),
     /* init */ discreteDislocationBias(ddBase.simulationParameters.useClusterDynamics? TextFileParser(ddBase.poly.materialFile).readMatrix<double,2,mSize>("discreteDislocationBias",true).eval() : Eigen::Array<double,2,mSize>::Zero()),
     /* IMMOBILE SPECIES */
     /* init */ immobileSpeciesVector((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<int>("immobileSpeciesVector",1,iSize/2,true).array().template cast<double>() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
@@ -173,6 +174,15 @@ namespace model
         {
             std::cout<<"second-order interaction matrix (in 1/s) for "<<static_cast<int>(msVector(k))<<"-species is: "<<std::endl;
             std::cout<<R2[k]*ddBase.poly.cs_SI/ddBase.poly.b_SI<<std::endl;
+        }
+
+        for(const auto& ch : loopNucChannels)
+        {// homogeneous-clustering channels feeding loop nucleation
+            std::cout<<"loop-nucleation channel "<<static_cast<int>(msVector(ch.first.first))
+                     <<" + "<<static_cast<int>(msVector(ch.first.second))
+                     <<" -> "<<static_cast<int>(msVector(ch.first.first)+msVector(ch.first.second))
+                     <<" : K = "<<ch.second*ddBase.poly.cs_SI/ddBase.poly.b_SI
+                     <<" 1/s (0-D: omega_a+omega_b, or 4*omega_a when a==b)"<<std::endl;
         }
     }
 
@@ -367,6 +377,84 @@ namespace model
         }
         
         return tempR2;
+    }
+
+    template<int dim>
+    std::map<std::pair<int,int>,double> ClusterDynamicsParameters<dim>::getLoopNucChannels() const
+    {/*! Homogeneous-clustering (loop-nucleating) channels, with the SAME
+      *  coefficient getR2() assembles into R2:
+      *
+      *      K_ab = p_ab * 4*pi*(r_a+r_b)*(D_a+D_b)/Omega ,
+      *
+      *  so that the mobile solve's per-species loss on this channel, K_ab*c_a*c_b
+      *  (the residual assembles 0.5*c^T R2 c, and R2 carries -K_ab twice), is
+      *  exactly what the loops gain in solveImmobileClusters(). K_ab equals the
+      *  0-D coefficient: omega_a+omega_b for a!=b, 4*omega_a for a==b.
+      *  A pair (a,b) is a
+      *  nucleation channel when
+      *
+      *    (i)  m_a and m_b have the SAME sign -- a mixed pair is recombination or
+      *         partial annihilation, not clustering; and
+      *    (ii) NO mobile species carries the product size m_a+m_b, so the product
+      *         is off the end of the mobile ladder and must become a loop embryo.
+      *
+      *  For the Zr3d_ghoniem network {v,i,2i,3i} this selects i+3i, 2i+2i and
+      *  2i+3i and rejects i+i (->2i), i+2i (->3i) and every v-bearing pair. The
+      *  0-D counts the first two in nucleation_rate_iL/aiL and all three in
+      *  nucleation_content_i; the third contributes ~2e-7 of the total here, so
+      *  including it in both is numerically immaterial and mass-consistent.
+      */
+        std::map<std::pair<int,int>,double> temp;
+        if(detD.empty())
+        {
+            return temp;
+        }
+
+        // Same radii and orientation-averaged diffusivities getR2() uses.
+        Eigen::Array<double,1,mSize> aveD(Eigen::Array<double,1,mSize>::Zero());
+        Eigen::Array<double,1,mSize> rn(Eigen::Array<double,1,mSize>::Zero());
+        for(int k=0;k<mSize;++k)
+        {
+            aveD(k)=pow(detD.begin()->second(k),1.0/3.0);
+            if(fabs(msVector(k)-1)<FLT_EPSILON || fabs(msVector(k)+1)<FLT_EPSILON)
+            {
+                rn(k)=pow(3.0*this->omega/4.0/M_PI,1.0/3.0);
+            }
+            else
+            {
+                rn(k)=pow(fabs(msVector(k)*this->omega/this->b/M_PI),1.0/2.0);
+            }
+        }
+
+        for(const auto& pair : reactionMap)
+        {
+            const int a(pair.first.first);
+            const int c(pair.first.second);
+            if(pair.second<=0.0)
+            {// channel switched off in the material file
+                continue;
+            }
+            if(msVector(a)*msVector(c)<=0.0)
+            {// opposite polarity (or a zero-size species): not clustering
+                continue;
+            }
+            const double product(msVector(a)+msVector(c));
+            bool productIsMobile(false);
+            for(int k=0;k<mSize;++k)
+            {
+                if(fabs(msVector(k)-product)<FLT_EPSILON)
+                {
+                    productIsMobile=true;
+                    break;
+                }
+            }
+            if(productIsMobile)
+            {// the ladder absorbs it; not a loop embryo
+                continue;
+            }
+            temp.emplace(pair.first,pair.second*4.0*M_PI*(rn(a)+rn(c))*(aveD(a)+aveD(c))/omega);
+        }
+        return temp;
     }
 
     template<int dim>

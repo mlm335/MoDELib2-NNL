@@ -48,6 +48,9 @@ Two build traps worth recording (handled in `Fluor_Zr/Docs/Formulation/build_mod
 - **New method `loopDADbias()`** — the Eq. (15) capture efficiencies,
   `Z_c = Z⁰·p`, `Z_a = Z⁰·(p + p⁻²)/2`, row 0 = ⟨c⟩ (vacancy) loops, row 1 = ⟨a⟩.
 - **New static `getClusterAtomicVolume()`** — see issue 6 below.
+- **New member `loopNucChannels` and method `getLoopNucChannels()`** — the subset
+  of `reactionMap` whose product size is carried by no mobile species, i.e. the
+  homogeneous-clustering reactions that nucleate loops. See issue 17 below.
 
 ### 2.2 `src/DislocationDynamicsBase/ClusterDynamicsParameters.cpp`
 
@@ -55,6 +58,9 @@ Two build traps worth recording (handled in `Fluor_Zr/Docs/Formulation/build_mod
   MoDELib units on read (`tauVac` seconds → b/cs, `rhoNetwork` m⁻² → b⁻²).
 - `omega(ddBase.poly.Omega)` → `omega(getClusterAtomicVolume(ddBase))`.
 - `r_min` now divided by `b_SI` on read (issue 5).
+- `getLoopNucChannels()` implemented, and the selected channels printed at
+  start-up with their coefficient in 1/s so they can be checked against the 0-D
+  jump frequencies by eye.
 
 ### 2.2b `mBWF` / `dmBWF` scale with `cdp.omega`, not `ddBase.poly.Omega`
 
@@ -91,6 +97,10 @@ new code.
   coalescence in two channels (like-loop conserves content, loop-network removes
   both), vacancy-loop dissolution, and thermal emission. DOF layout is
   `index = node*iSize + component`, `[0,nF)` densities and `[nF,2nF)` contents.
+- **Homogeneous-clustering (SIA) nucleation added** to both the density and the
+  content equations, evaluated per node from `cdp.loopNucChannels` and the local
+  mobile field, and split across the families of matching polarity in proportion
+  to `loopCascadeFractions`. See issue 17 below.
 
 ---
 
@@ -376,6 +386,103 @@ invisible in Po's calibration because `Eb_eV = 5.0` for every species makes
 physical 0.957 eV is what exposed it. **Worth reporting upstream**: it affects any
 MoDELib run with a non-negligible cluster binding energy.
 
+### 17. ⟨a⟩ loop nucleation was cascade-only
+**Symptom:** ⟨a⟩ loop density 0.53× the 0-D at 30 dpa, flat in dose. ⟨c⟩ density
+matched to 0.1% throughout, so this was specific to the interstitial families.
+**Cause:** the 0-D nucleates ⟨a⟩ loops from *two* sources — cascades
+(`G·ε_iL/n_iL_nuc`, `reaction_rates.nucleation_rate_iL/aiL`) and homogeneous SIA
+clustering (`R_i,3i + R_2i,2i`, with the matching content deposit
+`4R_i,3i + 2R_2i,2i + 3R_2i,3i` from `nucleation_content_i`). Only the first was
+wired. At the 0-D saturated state the budget is
+
+| source | loops/atom/s | share |
+|---|---|---|
+| cascade `G·ε_iL/n_iL_nuc` | 7.0429e−13 | 61.6% |
+| clustering `R_i,3i + R_2i,2i` | 4.3969e−13 | 38.4% |
+
+so cascade-only nucleation predicts a density ratio of 0.62 against the 0.53
+measured — the right size and sign for the whole discrepancy. The interstitials
+those reactions consume were simply disappearing: with no 4i species to receive
+the product, `getR2()` debits the reactants and credits nothing. That is the same
+truncation that raises `Warning: Sum of R2 is not zero` at start-up, previously
+recorded as benign.
+
+**Fix:** take the nucleation flux from the reaction network the mobile solve
+already uses, so the loops gain exactly what the mobile field loses.
+`getLoopNucChannels()` selects the pairs `(a,b)` that
+
+1. have reactants of the same polarity (a mixed pair is recombination), and
+2. have a product size `m_a+m_b` carried by **no** mobile species, so the product
+   is off the end of the ladder and must become a loop embryo.
+
+For `{v,i,2i,3i}` that selects `i+3i`, `2i+2i` and `2i+3i`, and rejects `i+i`
+(→2i), `i+2i` (→3i) and every v-bearing pair. The 0-D counts the first two in the
+number source and all three in the content source; the third is ~2e−7 of the total
+here, so including it in both is immaterial and keeps the split mass-consistent.
+
+**Factor-of-two trap:** `getR2()` writes `−K_ab` into *both* `R2[a](a,b)` and
+`R2[a](b,a)`, so `cᵀR2[a]c = −2K_ab c_a c_b` — but the residual is assembled as
+`R2*(0.5*mobileClusters)` (`lWF_R2`), the quadratic-form factor that makes
+`bWF_R2 = R2*c` its exact Jacobian. The per-species loss rate is therefore
+`K_ab c_a c_b`, not `2K_ab c_a c_b`.
+
+**Verification** — the channel coefficients printed at start-up against the 0-D
+jump frequencies (`ω_m = z_c ν exp(−E_m/kT)`, T = 573 K):
+
+| channel | Zr3d_ghoniem K [1/s] | ZrMicro | error |
+|---|---|---|---|
+| i+3i → 4i | 5.0535398e7 | `ω_i + ω_3i` = 5.0535398e7 | 4e−6 |
+| 2i+2i → 4i | 9.8765170e2 | `4ω_2i` = 9.8812394e2 | 0.05% |
+| 2i+3i → 5i | 4.9382578e2 | `ω_2i + ω_3i` = 4.9406197e2 | 0.05% |
+
+**Content vs number:** cascade-borne loops are born at `nNuc` defects, clustering-
+borne embryos carry only the `|m_a|+|m_b|` atoms of the event that made them, so
+the two sources are *not* divided by the same number — exactly as in the 0-D,
+where the cascade term is `G_iL/n_iL_nuc` while the clustering term is the bare
+reaction rate. This dilutes the mean loop size, and it should: `m_a` moved from
+1.164× the 0-D to 1.114×.
+
+**Family split:** in proportion to `loopCascadeFractions` within each polarity.
+The 0-D splits the clustering flux with `f_na`/`f_a`, the very fractions that split
+`G_iL` into `G_iL`/`G_aiL`, so this reproduces the 0-D split exactly and
+generalizes to any number of families.
+
+**Effect (30 dpa, median interior):**
+
+| quantity | before | after | 0-D |
+|---|---|---|---|
+| ⟨a⟩ loop density | 0.533× | **0.704×** | 1.0 |
+| ⟨a⟩ loop content | 0.620× | **0.784×** | 1.0 |
+| ⟨a⟩ defects/loop | 1.164× | **1.114×** | 1.0 |
+| ⟨c⟩ loop density | 0.999× | 0.999× | 1.0 |
+
+### 18. C2i/C3i depleted ~2.5× once the loops have grown — **OPEN**
+**Symptom:** at 1 dpa C2i and C3i agree with the 0-D to 1–2%; by 5 dpa they have
+fallen to 0.41–0.45× and they stay there. The 0-D values are flat in dose.
+**Cause:** ZrMicro's loops absorb 2i and 3i for GROWTH —
+`flux_i = ω_i(C_i + 2C_2i + 3C_3i)`, `reaction_rates.flux_i` — but `dC2i_dt` and
+`dC3i_dt` never debit those pools. Their only sinks there are the network
+(`R_2i_s`, `R_3i_s`), recombination with Cv, and the cluster reactions.
+Zr3d_ghoniem's `ImmobileSinks` *does* debit them, so the 3-D carries a 2i/3i loop
+sink the 0-D lacks. The onset coincides with loop growth, which is the tell.
+**Magnitude:** C2i is linear in its own loss coefficient, so
+
+    C2i_3D/C2i_0D = Λ_0D / (Λ_0D + D_i k²_loops)
+
+with, at 30 dpa, `Λ_0D` = 20.92 1/s (of which `R_2i_s` = 20.86) and
+`D_i k²_loops` = 17.86 1/s, giving 0.54 against the 0.41 measured. Same
+mechanism, right order; the residual is the sigmoid sink law of `clusterDensity()`
+and the 2i↔3i coupling, neither of which the one-line estimate carries.
+**Why it matters here:** the clustering nucleation flux of issue 17 is
+`K·C_i·C_3i`, so a depleted C3i feeds it directly. The 3-D's own nucleation rate
+is 0.782× the 0-D's for this reason, and `0.704 / 0.782 = 0.90` — i.e. with the
+cluster concentrations matched, the ⟨a⟩ density would land at ~0.90×.
+**Not fixed, because it is a physics decision, not a bug in either code as such.**
+Zr3d_ghoniem is the mass-conserving one: a loop that absorbs a di-interstitial
+must remove it from the mobile pool. The reconciling change belongs in ZrMicro —
+add the loop sink to `dC2i_dt`/`dC3i_dt` — but that shifts the 0-D fit that the
+experiments are calibrated against, so it is your call.
+
 ---
 
 ## 5b. Verification against the 0-D
@@ -388,22 +495,32 @@ are depleted so loops neither grow nor coalesce and simply accumulate at their
 nucleation value. A per-quantity percentile picks the boundary for the immobile
 fields and the interior for the mobile ones.
 
-| quantity | 1 dpa | 2 dpa |
-|---|---|---|
-| Cv | +7.3% | −1.4% |
-| Ci | +14.5% | +11.2% |
-| C2i | +1.2% | −41.1% |
-| C3i | −2.3% | −43.1% |
-| ⟨c⟩ loop density | −0.13% | −0.07% |
-| ⟨c⟩ loop content | −38.3% | −38.4% |
-| ⟨a⟩ loop density | −57.4% | −48.4% |
-| ⟨a⟩ loop content | −51.4% | −37.7% |
-| ⟨a⟩ defects/loop | 1.14× | 1.21× |
-| ⟨c⟩ defects/loop | 0.62× | 0.62× |
+Ratios 3-D / 0-D, from the 31-step run to 30 dpa. "before" is cascade-only
+nucleation, "after" is with the homogeneous SIA clustering flux of issue 17.
 
-Mobile species and the ⟨c⟩ loop density agree to a few percent. The remaining
-factor-of-two on ⟨a⟩ loop density is consistent in sign with the known gaps below:
-the homogeneous clustering flux `Phi_clus` is not wired, and it would ADD ⟨a⟩ loops.
+| quantity | 1 dpa | 5 dpa | 10 dpa | 30 dpa |
+|---|---|---|---|---|
+| Cv | 1.073 | 0.982 | 0.994 | 1.004 |
+| Ci | 1.145 | 1.112 | 1.133 | 1.148 |
+| C2i | 1.012 | 0.412 | 0.394 | 0.388 |
+| C3i | 0.977 | 0.400 | 0.383 | 0.377 |
+| ⟨c⟩ loop density | 0.999 | 0.999 | 0.999 | 0.999 |
+| ⟨a⟩ loop density — before | 0.426 | 0.547 | 0.540 | 0.533 |
+| ⟨a⟩ loop density — **after** | **0.662** | **0.739** | **0.718** | **0.704** |
+| ⟨a⟩ loop content — before | 0.486 | 0.634 | 0.627 | 0.620 |
+| ⟨a⟩ loop content — **after** | **0.639** | **0.811** | **0.795** | **0.784** |
+| ⟨a⟩ defects/loop — before | 1.141 | 1.159 | 1.159 | 1.164 |
+| ⟨a⟩ defects/loop — **after** | **0.965** | **1.098** | **1.106** | **1.114** |
+
+Cv agrees to within 2% beyond 5 dpa and the ⟨c⟩ loop density to 0.1% at every dose.
+Ci runs 11–15% high throughout, at every dose and in both runs.
+
+The two remaining discrepancies are one story, not two. The ⟨a⟩ loop density is
+0.704× and the 3-D's own nucleation rate — evaluated from its own, depleted
+cluster concentrations — is 0.782× the 0-D's, so `0.704 / 0.782 = 0.90`: at
+matched C2i/C3i the density would land within 10%. C2i/C3i are depleted because
+of the 2i/3i loop sink of issue 18, which the 0-D does not carry. Closing issue 18
+should therefore close most of what is left on the ⟨a⟩ families as well.
 
 ---
 
@@ -411,9 +528,10 @@ the homogeneous clustering flux `Phi_clus` is not wired, and it would ADD ⟨a�
 
 **Working:** MoDELib builds and runs the §2.2 physics. The mobile Newton iteration
 converges cleanly (7.5e6 → 6.2e-8 in ten iterations, quadratic tail). ⟨a⟩ families are
-symmetric at zero stress. The reaction network matches ZrMicro to ~0.1%. Mobile
-species, both cluster species and the ⟨c⟩ loop density all agree with the 0-D to a few
-percent (§5b). No negative concentrations anywhere.
+symmetric at zero stress. The reaction network matches ZrMicro to ~0.1%, including the
+three loop-nucleation channels (§5, issue 17). Cv and the ⟨c⟩ loop density agree with
+the 0-D to 2% and 0.1%; the ⟨a⟩ loop density is 0.70× and its content 0.78× (§5b). No
+negative concentrations anywhere, at any dose.
 
 **Two further outputs added for post-processing:**
 - `evl/cdNodes.txt` — finite-element node coordinates, written once per run. Without
@@ -427,16 +545,23 @@ percent (§5b). No negative concentrations anywhere.
 **Known modelling gaps, all documented in the coupling `.tex`:**
 
 1. ~~**Loop sink strengths differ by construction.**~~ **Resolved** — see §3.4.
-2. **Nucleation is cascade-only.** The homogeneous clustering flux
-   `Φ_clus = R_i,3i + R_2i,2i` and the SIPN stress weights `w_k(σ)` are not wired.
-   Exact at zero stress, which is the configured condition.
+2. ~~**Nucleation is cascade-only.**~~ **Resolved for the clustering flux**
+   `Φ_clus = R_i,3i + R_2i,2i` — see §5, issue 17. The SIPN stress weights `w_k(σ)`
+   are still not wired; exact at zero stress, which is the configured condition.
 3. **DAD is a fitting form, not a generated one.** `dadAnisotropy`/`dadZ0` are fitted
    to reproduce the 0-D symmetric bias forms rather than derived from `D_c/D_a`, and
    the diffusion tensors are isotropic to match ZrMicro. These runs therefore exercise
    none of the tensorial-DAD mechanism of the deliverable, and the fit is tied to 573 K.
-4. **`Warning: Sum of R2 is not zero`** — benign and pre-existing. The reaction map
-   contains `i+3i` but there is no 4i species to receive the product, so that channel
-   does not conserve interstitials. ZrMicro truncates the cluster ladder at the same place.
+4. **`Warning: Sum of R2 is not zero`** — expected, and now *meaningful* rather than
+   merely benign. The reaction map contains `i+3i` but there is no 4i species to
+   receive the product, so that channel does not conserve interstitials within the
+   mobile ladder. Those interstitials are no longer unaccounted: they are exactly the
+   loop embryos of issue 17, and the immobile solve now credits them. ZrMicro
+   truncates the cluster ladder at the same place, for the same reason.
+5. **2i/3i are absorbed at the loops here but not in the 0-D** — issue 18. This is
+   the largest remaining source of disagreement and it is a physics decision, not a
+   bug: Zr3d_ghoniem is the mass-conserving one, but the reconciling change belongs
+   in ZrMicro and would move a fit the experiments are calibrated against.
 
 **Performance note:** `useElasticDeformation=1` costs ~42 s/step on a 72,345-dof solve
 for a case with no dislocations and no applied stress — roughly 20 minutes of a 30-step
