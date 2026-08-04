@@ -19,11 +19,58 @@
 namespace model
 {
 
+    /**********************************************************************/
+    /* Atomic volume used by the cluster-dynamics equations, in units of b^3.
+     *
+     * Polycrystal::Omega is det(latticeBasis), i.e. the volume of the lattice
+     * CELL. For HEX that cell contains two atoms (det = sqrt(2) for c/a=1.633),
+     * so it is twice the atomic volume the CD equations assume, and every
+     * content <-> radius <-> density conversion inherits the error. Rather than
+     * change Polycrystal (which the elastic/DD side also uses), let the material
+     * file state the atomic volume explicitly. The key is OPTIONAL: material
+     * files that do not define it keep the previous behaviour.
+     */
+    template<int dim>
+    double ClusterDynamicsParameters<dim>::getClusterAtomicVolume(const DislocationDynamicsBase<dim>& ddBase)
+    {
+        if(ddBase.simulationParameters.useClusterDynamics)
+        {
+            try
+            {
+                const double omegaSI(TextFileParser(ddBase.poly.materialFile).template readScalar<double>("atomicVolume_SI",true));
+                return omegaSI/std::pow(ddBase.poly.b_SI,3);
+            }
+            catch(const std::runtime_error&)
+            {// key absent -- fall through to the lattice-cell volume
+            }
+        }
+        return ddBase.poly.Omega;
+    }
+
+    /**********************************************************************/
+    /* Positivity floor on all concentrations, mirroring ZrMicro's C_floor.
+     * Optional material key; defaults to ZrMicro's own default of 1e-20. */
+    template<int dim>
+    double ClusterDynamicsParameters<dim>::getConcentrationFloor(const DislocationDynamicsBase<dim>& ddBase)
+    {
+        if(ddBase.simulationParameters.useClusterDynamics)
+        {
+            try
+            {
+                return TextFileParser(ddBase.poly.materialFile).template readScalar<double>("concentrationFloor",true);
+            }
+            catch(const std::runtime_error&)
+            {// key absent -- ZrMicro's default
+            }
+        }
+        return 1.0e-20;
+    }
+
     template<int dim>
     ClusterDynamicsParameters<dim>::ClusterDynamicsParameters(const DislocationDynamicsBase<dim>& ddBase) :
     /* init */ kB(ddBase.poly.kB),
     /* init */ T(ddBase.poly.T),
-    /* init */ omega(ddBase.poly.Omega),
+    /* init */ omega(getClusterAtomicVolume(ddBase)),
     /* init */ b(ddBase.poly.b),
     /* init */ G0(ddBase.simulationParameters.useClusterDynamics? TextFileParser(ddBase.poly.materialFile).readScalar<double>("doseRate_dpaPerSec",true)*(ddBase.poly.b_SI/ddBase.poly.cs_SI) : 0.0),
     /* MOBILE SPECIES */
@@ -38,6 +85,7 @@ namespace model
     /* init */ msCascadeFractions((mSize>1 && G0>0.0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double>("mobileSpeciesCascadeFractions",1,mSize,true) : Eigen::Matrix<double,1,mSize>::Ones()),
     /* init */ msSurvivingEfficiency(G0>0.0 ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("mobileSpeciesSurvivingEfficiency",true) : 1.0),
     /* init */ G(G0*msSurvivingEfficiency*msCascadeFractions),
+    /* init */ Eb((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,mSize>("Eb_eV",true).array()*ddBase.poly.eV2J/ddBase.poly.mu_SI/pow(ddBase.poly.b_SI,3) : Eigen::Array<double,1,mSize>::Zero().eval()),
     /* init */ otherSinks(ddBase.simulationParameters.useClusterDynamics? (TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,mSize>("otherSinks_SI",true)*ddBase.poly.b_SI*ddBase.poly.b_SI).eval() : Eigen::Array<double,1,mSize>::Zero()),
     //    /* init */ dislocationSinks(TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("dislocationSinks_SI",true)*ddBase.poly.b_SI*ddBase.poly.b_SI),
     //    /* init */ initloopSinks(getInitLoopSinks(TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize>("initloopSinks_SI",true),ddBase.poly.b_SI)),
@@ -55,12 +103,29 @@ namespace model
     /* init */ delVPyramid((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("delVPyramid",true)/pow(ddBase.poly.b_SI,3) : 0.0),
     /* init */ w0((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("w0",true) : 0.0),
     /* init */ n_s((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("n_s",true) : 0.0 ),
-    /* init */ Eb((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,mSize>("Eb_eV",true).array()*ddBase.poly.eV2J/ddBase.poly.mu_SI/pow(ddBase.poly.b_SI,3) : Eigen::Array<double,1,mSize>::Zero().eval()),
     /* init */ evc((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("evc",true) : 0.0 ),
     /* init */ Nvmax((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("Nvmax",true)*pow(ddBase.poly.b_SI,3) : 0.0 ),
     /* init */ nmin((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("nmin",true) : Eigen::Array<double,1,iSize/2>::Zero()),
     /* init */ nmax((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("nmax",true) : Eigen::Array<double,1,iSize/2>::Zero()),
-    /* init */ r_min((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("r_min",true).array() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
+    // r_min is given in [m] in the material file. Convert to b, so that it can be
+    // compared directly against the radii returned by rloop()/rpyr(), which are in
+    // units of b. The shrinking gate of Eq. (91) is its only consumer.
+    /* init */ r_min((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? (TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("r_min",true).array()/ddBase.poly.b_SI).eval() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
+    /* IMMOBILE KINETICS -- Deliverable D1/M1 Sec. 2.2 */
+    /* init */ loopCascadeFractions((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("loopCascadeFractions",true).array().eval() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
+    /* init */ nNuc((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("nNuc",true).array().eval() : Eigen::Array<double,1,iSize/2>::Ones().eval()),
+    /* init */ cLL((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("cLL",true).array().eval() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
+    /* init */ cLN((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("cLN",true).array().eval() : Eigen::Array<double,1,iSize/2>::Zero().eval()),
+    /* init */ kappaLL((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("kappaLL",true) : 0.0),
+    /* init */ kappaLN((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("kappaLN",true) : 0.0),
+    // tau_vL(T)=tau0*exp(Ea/kB T), Eq. (95); seconds -> MoDELib time units (b/cs).
+    /* init */ tauVac((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("tau0_vLoop_SI",true)*exp(TextFileParser(ddBase.poly.materialFile).readScalar<double>("Ea_vLoop_eV",true)/(8.617333262e-5*T))*(ddBase.poly.cs_SI/ddBase.poly.b_SI) : 1.0),
+    // network dislocation density: [1/m^2] -> [1/b^2]
+    /* init */ rhoNetwork((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<double>("rhoNetwork_SI",true)*ddBase.poly.b_SI*ddBase.poly.b_SI : 0.0),
+    /* init */ dadAnisotropy((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,mSize>("dadAnisotropy",true).array().eval() : Eigen::Array<double,1,mSize>::Ones().eval()),
+    /* init */ dadZ0((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,mSize>("dadZ0",true).array().eval() : Eigen::Array<double,1,mSize>::Ones().eval()),
+    /* init */ loopSinkScale((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,iSize/2>("loopSinkScale",true).array().eval() : Eigen::Array<double,1,iSize/2>::Ones().eval()),
+    /* init */ concentrationFloor(getConcentrationFloor(ddBase)),
     /* init */ computeReactions((ddBase.simulationParameters.useClusterDynamics && mSize>0 && mSize+iSize>1)? TextFileParser(ddBase.poly.materialFile).readScalar<int>("computeReactions",true) : 0),
 //    /* init */ use0DsinkStrength((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readScalar<int>("use0DsinkStrength",true) : 0),
 //    /* init */ Zv((ddBase.simulationParameters.useClusterDynamics && iSize>0) ? TextFileParser(ddBase.poly.materialFile).readMatrix<double,1,dim>("Zv",true) : Eigen::Array<double,1,dim>::Zero()),
@@ -523,6 +588,54 @@ namespace model
         const Eigen::Array<double,1,iSize/2> n = CI/N/omega;
         
         return sigmoidalPlotVectorInterpolation(CI,N,rpyr(n),rloop(n));
+    }
+
+    /**********************************************************************/
+    /* Diffusional-anisotropy-difference (DAD) capture efficiencies.
+     * Deliverable D1/M1 Eq. (15):
+     *      p_m = (D_c^m / D_a^m)^(1/6)
+     *      Z_aL,m = Z0_m (p_m + p_m^-2)/2      (prismatic <a> loops)
+     *      Z_cL,m = Z0_m  p_m                  (basal <c> loops)
+     * CALIBRATION (adopted). p_m and Z0_m are NOT derived from the diffusion
+     * tensors here. They are supplied through `dadAnisotropy` and `dadZ0` in the
+     * material file, fitted so that Eq. (15) reproduces the 0-D empirical
+     * SYMMETRIC forms of Eqs. (63)-(64) as closely as possible:
+     *
+     *     Z^a_i = 1+delta_i    Z^a_v = 1-delta_v
+     *     Z^c_i = 1-delta_i    Z^c_v = 1+delta_v
+     *
+     * Because Eq. (15) carries two free parameters per species (Z0_m, p_m) and
+     * the 0-D forms impose two targets (Z_a, Z_c), the system inverts EXACTLY:
+     *
+     *     2 Z_a / Z_c = 1 + p^-3     ->  p  = (2 Z_a/Z_c - 1)^(-1/3)
+     *                                    Z0 = Z_c / p
+     *
+     * so the fit is exact to machine precision, not a least-squares compromise.
+     * The fitted values are also physically sensible for h.c.p. Zr: p_v>1
+     * (vacancies faster along c) and p_i<1 (interstitials faster in the basal
+     * plane).
+     *
+     * NOTE the consequence: the 0-D symmetric forms impose Z^a_m + Z^c_m = 2,
+     * a normalization Eq. (15) does not naturally satisfy, so p_m no longer
+     * equals (D_c/D_a)^(1/6) of the material file's migration tensors. The bias
+     * is therefore CALIBRATED to the reduced model rather than generated from
+     * the tensors, and it is tied to the temperature at which delta_i(T) was
+     * evaluated (delta_i is T-interpolated between 300 K and 600 K anchors in
+     * the 0-D model). Refit dadAnisotropy/dadZ0 if T changes.
+     *
+     * Returned: row 0 = <c> (vacancy) loops, row 1 = <a> (interstitial) loops.
+     */
+    template<int dim>
+    Eigen::Array<double,2,ClusterDynamicsParameters<dim>::mSize> ClusterDynamicsParameters<dim>::loopDADbias() const
+    {
+        Eigen::Array<double,2,mSize> Z(Eigen::Array<double,2,mSize>::Ones());
+        for(int k=0;k<mSize;++k)
+        {
+            const double pm(std::max(dadAnisotropy(k),double(FLT_EPSILON)));
+            Z(0,k)=dadZ0(k)*pm;                             // <c> loops,  Eq. (15)
+            Z(1,k)=dadZ0(k)*0.5*(pm+std::pow(pm,-2.0));     // <a> loops,  Eq. (15)
+        }
+        return Z;
     }
 
     template struct ClusterDynamicsParameters<3>;

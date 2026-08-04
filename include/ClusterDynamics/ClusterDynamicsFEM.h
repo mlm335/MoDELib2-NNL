@@ -134,6 +134,8 @@ namespace model
         const Eigen::VectorXd cascadeGlobalProduction;
 
         ClusterDynamicsFEM(const DislocationDynamicsBase<dim>& ddBase_in,const ClusterDynamicsParameters<dim>& cdp_in);
+        void clampMobileClusters();   // positivity floor (ZrMicro C_floor)
+        void writeNodePositions() const;  // evl/cdNodes.txt, for spatial plotting
         void solveMobileClusters();
         void solveImmobileClusters();
         void solve();
