@@ -7,9 +7,7 @@ project(MoDELib VERSION 2.0.0 LANGUAGES C CXX)
 
 option(USE_PYBIND11 "enables pybind11" ON)
 option(BUILD_TOOLS "builds tools" ON)
-set(EIGEN3_INCLUDE_DIRS /opt/local/include/eigen3)
-list(APPEND CMAKE_PREFIX_PATH "/Users/matthewmaron/Qt/6.7.3/macos/lib/cmake")
-set(RPATH "/opt/local/lib/libgcc")
+set(EIGEN3_INCLUDE_DIRS /usr/include/eigen3)
 list(APPEND CMAKE_BUILD_RPATH ${RPATH})
 
 set(CMAKE_BUILD_TYPE Release)
